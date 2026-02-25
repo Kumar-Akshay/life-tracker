@@ -1,8 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @inject AuthStateProvider AuthState
 @inject NavigationManager Nav
+@implements IDisposable
 
-@if (AuthState.IsAuthenticated)
+@if (_showSidebar)
 {
     <div class="lt-app-shell">
         <!-- ── Sidebar ── -->
@@ -92,6 +93,29 @@ else
 }
 
 @code {
+    private bool _showSidebar;
+
+    private static readonly string[] _authPages = { "/login", "/register" };
+
+    protected override void OnInitialized()
+    {
+        _showSidebar = !IsAuthPage();
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _showSidebar = !IsAuthPage();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsAuthPage()
+    {
+        var relative = Nav.ToBaseRelativePath(Nav.Uri).ToLowerInvariant().TrimEnd('/');
+        if (string.IsNullOrEmpty(relative)) return false; // root → dashboard, show sidebar
+        return _authPages.Any(p => relative.StartsWith(p.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
+    }
+
     private string _initials => AuthState.CurrentUser?.FullName?.Length > 0
         ? AuthState.CurrentUser.FullName[..1].ToUpper()
         : "U";
@@ -101,5 +125,10 @@ else
         AuthState.ClearToken();
         Nav.NavigateTo("/login");
         await Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
     }
 }
