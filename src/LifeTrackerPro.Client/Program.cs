@@ -9,7 +9,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configure HttpClient to point to API
-var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7200";
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7001";
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 
 // MudBlazor

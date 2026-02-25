@@ -67,3 +67,4 @@ coverage*/
 *.bak
 *.tmp
 *.cache
+*.db

@@ -13,11 +13,25 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Database
+        // Database — use SQLite for development, PostgreSQL for production
+        var usePostgres = !string.IsNullOrEmpty(configuration.GetConnectionString("DefaultConnection"))
+            && configuration.GetConnectionString("DefaultConnection")!.Contains("Host=");
+
         services.AddDbContext<LifeTrackerDbContext>(options =>
-            options.UseNpgsql(
-                configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly(typeof(LifeTrackerDbContext).Assembly.FullName)));
+        {
+            if (usePostgres)
+            {
+                options.UseNpgsql(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    b => b.MigrationsAssembly(typeof(LifeTrackerDbContext).Assembly.FullName));
+            }
+            else
+            {
+                var sqlitePath = configuration.GetConnectionString("DefaultConnection")
+                    ?? "Data Source=lifetrackerpro.db";
+                options.UseSqlite(sqlitePath);
+            }
+        });
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<LifeTrackerDbContext>());
 
