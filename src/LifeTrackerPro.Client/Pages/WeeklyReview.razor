@@ -1,0 +1,105 @@
+@page "/weekly-review"
+
+<PageTitle>Weekly Review — LifeTracker Pro</PageTitle>
+
+<div class="page-enter">
+    <h1 class="lt-page-heading">Weekly <span class="accent">Review</span></h1>
+    <p class="lt-page-subtitle">Reflect, recalibrate, and plan the week ahead</p>
+
+    <!-- AI Summary -->
+    <div class="lt-card accent lt-ai-summary" style="margin-bottom:22px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <span style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em;">
+                AI Summary — Week 4, January
+            </span>
+        </div>
+        <p>
+            "Strong week for productivity with 40h of focused work — your highest this month.
+            Exercise dropped slightly to 12h but you maintained your 5-day streak.
+            Social time was lower than average; consider scheduling friend time next week.
+            Weight trend is excellent at -2.4 kg for the month."
+        </p>
+    </div>
+
+    <div class="lt-chart-grid-2" style="margin-bottom:22px;">
+        <!-- Week at a Glance -->
+        <div class="lt-card">
+            <div class="lt-section-label"><span>Week at a Glance</span></div>
+            <div style="display:grid; gap:12px;">
+                @foreach (var (stat, idx) in _weekStats.Select((s, i) => (s, i)))
+                {
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;@(idx < _weekStats.Count - 1 ? " border-bottom:1px solid var(--border);" : "")">
+                        <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@stat.Label</span>
+                        <div style="text-align:right;">
+                            <div style="font-size:18px; font-weight:700; color:@stat.Color; font-family:var(--font-serif);">@stat.Value</div>
+                            <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@stat.Delta</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Reflection -->
+        <div class="lt-card">
+            <div class="lt-section-label"><span>Reflection</span></div>
+            @foreach (var (q, idx) in _reflections.Select((r, i) => (r, i)))
+            {
+                <div style="@(idx < _reflections.Count - 1 ? "margin-bottom:18px;" : "")">
+                    <div style="font-size:11px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">@q.Question</div>
+                    <p style="font-size:14px; color:var(--ink); font-family:var(--font-sans); line-height:1.6; margin:0;">@q.Answer</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Goals Progress -->
+    <div class="lt-card">
+        <div class="lt-section-label"><span>Goals Progress This Week</span></div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+            @foreach (var goal in _weekGoals)
+            {
+                <div style="text-align:center; padding:16px; border-radius:14px; background:@(goal.Progress == 100 ? "var(--success-pale)" : "var(--pampas)"); border:1px solid @(goal.Progress == 100 ? "rgba(91,140,81,0.15)" : "var(--border)");">
+                    <svg width="64" height="64" viewBox="0 0 64 64" style="margin:0 auto 8px; display:block;">
+                        <circle cx="32" cy="32" r="27" fill="none" stroke="var(--pampas)" stroke-width="5" />
+                        <circle cx="32" cy="32" r="27" fill="none" stroke="@goal.Color" stroke-width="5"
+                                stroke-dasharray="@((int)(goal.Progress / 100.0 * 170)) 170"
+                                stroke-linecap="round" transform="rotate(-90 32 32)"
+                                style="transition:stroke-dasharray 1.5s cubic-bezier(0.16,1,0.3,1);" />
+                        <text x="32" y="36" text-anchor="middle" fill="var(--ink)" font-size="14" font-weight="700"
+                              font-family="'JetBrains Mono',monospace">@goal.Progress%</text>
+                    </svg>
+                    <div style="font-size:11px; color:var(--ink-soft); font-family:var(--font-sans); font-weight:600;">@goal.Name</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private record WeekStat(string Label, string Value, string Delta, string Color);
+    private record Reflection(string Question, string Answer);
+    private record WeekGoal(string Name, int Progress, string Color);
+
+    private readonly List<WeekStat> _weekStats = new()
+    {
+        new("Work Hours", "40h", "▲ 5h vs W3", "#C15F3C"),
+        new("Sleep Avg", "7.4h", "▼ 0.4h", "#6B8EC7"),
+        new("Exercise", "12h", "▲ 5h vs W3", "#5B8C51"),
+        new("Spending", "$55", "Under $75 budget", "#C49A2D")
+    };
+
+    private readonly List<Reflection> _reflections = new()
+    {
+        new("What went well?", "Consistent early mornings, maintained exercise streak, shipped two PRs"),
+        new("What could improve?", "Less social media scrolling, need to read more, skipped journaling twice"),
+        new("Next week's focus?", "Finish Clean Architecture book, prep for system design interview")
+    };
+
+    private readonly List<WeekGoal> _weekGoals = new()
+    {
+        new("Exercise 5 days", 100, "#5B8C51"),
+        new("Read 4 chapters", 75, "#C15F3C"),
+        new("Spend < $75", 100, "#5B8C51"),
+        new("Meditate daily", 57, "#C49A2D")
+    };
+}

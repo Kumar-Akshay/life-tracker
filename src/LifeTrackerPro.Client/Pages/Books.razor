@@ -2,86 +2,80 @@
 
 <PageTitle>Books — LifeTracker Pro</PageTitle>
 
-<h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Book Reading List</h2>
-<p class="subtitle-text">Track reading progress and capture knowledge</p>
+<div class="page-enter">
+    <h1 class="lt-page-heading">Book <span class="accent">Collection</span></h1>
+    <p class="lt-page-subtitle">Track your reading journey, one page at a time</p>
 
-<!-- Stats -->
-<div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:20px;">
-    <div class="metric-card">
-        <span class="metric-value">@_books.Count</span>
-        <span class="metric-label">Total Books</span>
+    <!-- Stats -->
+    <div class="lt-kpi-grid" style="margin-bottom:24px;">
+        <div class="lt-card">
+            <div class="lt-stat-label">Books</div>
+            <div class="lt-stat-value">4</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Completed</div>
+            <div class="lt-stat-value">1</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Pages</div>
+            <div class="lt-stat-value">942</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Pace</div>
+            <div class="lt-stat-value">15<span class="unit">/day</span></div>
+        </div>
     </div>
-    <div class="metric-card">
-        <span class="metric-value">@_books.Count(b => b.Status == "Completed")</span>
-        <span class="metric-label">Completed</span>
-    </div>
-    <div class="metric-card">
-        <span class="metric-value">@_books.Sum(b => b.Current)</span>
-        <span class="metric-label">Pages Read</span>
-    </div>
-    <div class="metric-card">
-        <span class="metric-value">15 pg/day</span>
-        <span class="metric-label">Reading Pace</span>
-    </div>
+
+    <!-- Book Cards -->
+    @foreach (var book in _books)
+    {
+        <div class="lt-card" style="margin-bottom:12px; display:flex; gap:20px; align-items:center;">
+            <!-- Cover -->
+            <div class="lt-book-cover" style="background:@book.Color; box-shadow:4px 6px 16px @(book.Color)20;">
+                <span>@book.Title[0]</span>
+            </div>
+
+            <!-- Info -->
+            <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <div style="color:var(--ink); font-size:17px; font-weight:700; font-family:var(--font-serif);">@book.Title</div>
+                        <div style="color:var(--ink-muted); font-size:12px; font-family:var(--font-sans);">@book.Author</div>
+                    </div>
+                    <span class="lt-tag @(book.Status == "Completed" ? "success" : book.Status == "In Progress" ? "warning" : "")"
+                          style="font-size:10px; padding:4px 12px; border-radius:10px; font-weight:700;
+                                 @(book.Status == "Completed" ? "background:var(--success-pale); color:var(--success);" :
+                                   book.Status == "In Progress" ? "background:var(--warning-pale); color:var(--warning);" :
+                                   "background:var(--cloudy-pale); color:var(--ink-muted);")">
+                        @book.Status
+                    </span>
+                </div>
+                <div style="margin-top:10px;">
+                    <div class="lt-progress-track" style="height:6px;">
+                        <div class="lt-progress-fill @(book.Status == "Completed" ? "success" : "crail")"
+                             style="width:@(book.TotalPages > 0 ? (int)(book.ReadPages * 100.0 / book.TotalPages) : 0)%;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                        <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@book.ReadPages/@book.TotalPages pages</span>
+                        @if (book.Rating > 0)
+                        {
+                            <span style="font-size:11px; color:var(--warning);">@(new string('★', book.Rating))</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
-<!-- Book Cards -->
-@foreach (var book in _books)
-{
-    var colorIndex = _books.IndexOf(book) % _bookColors.Length;
-    var gradient = _bookColors[colorIndex];
-
-    <div class="book-card">
-        <!-- Book Cover -->
-        <div class="book-cover" style="background:linear-gradient(135deg, @gradient.From, @gradient.To);">
-            <span>@book.Title[0]</span>
-        </div>
-
-        <!-- Book Info -->
-        <div style="flex:1;">
-            <div style="display:flex; justify-content:space-between; align-items:start;">
-                <div>
-                    <div style="color:#e2e8f0; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif;">@book.Title</div>
-                    <div style="color:#64748b; font-size:12px; font-family:'DM Sans',sans-serif;">@book.Author · @book.Genre</div>
-                </div>
-                <span class="lt-tag @(book.Status == "Completed" ? "lt-tag-green" : book.Status == "In Progress" ? "lt-tag-yellow" : "lt-tag-muted")" style="font-weight:600;">
-                    @book.Status
-                </span>
-            </div>
-
-            <!-- Progress Bar -->
-            <div style="margin-top:8px;">
-                <div class="lt-progress-bar">
-                    <div class="lt-progress-fill" style="width:@((double)book.Current / book.Pages * 100)%; background:@(book.Status == "Completed" ? "#22c55e" : "#6366f1");"></div>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:4px;">
-                    <span style="font-size:10px; color:#64748b; font-family:'Space Mono',monospace;">@book.Current / @book.Pages pages</span>
-                    @if (book.Rating > 0)
-                    {
-                        <span style="font-size:10px; color:#eab308;">@(new string('★', book.Rating))</span>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
-    private List<BookItem> _books = new()
-    {
-        new("Clean Architecture", "Robert C. Martin", 432, 432, "Completed", 5, "Engineering"),
-        new("Designing Data-Intensive Applications", "Martin Kleppmann", 616, 310, "In Progress", 0, "Systems"),
-        new("Atomic Habits", "James Clear", 320, 0, "To Start", 0, "Self-Help"),
-        new("The Pragmatic Programmer", "Hunt & Thomas", 352, 200, "In Progress", 0, "Engineering"),
-    };
+    private record BookInfo(string Title, string Author, int TotalPages, int ReadPages, string Status, int Rating, string Color);
 
-    private (string From, string To)[] _bookColors = new[]
+    private readonly List<BookInfo> _books = new()
     {
-        ("#6366f1", "#8b5cf6"),
-        ("#2563eb", "#3b82f6"),
-        ("#16a34a", "#22c55e"),
-        ("#d4a373", "#e8a87c"),
+        new("Clean Architecture", "R.C. Martin", 432, 432, "Completed", 5, "#C15F3C"),
+        new("Data-Intensive Apps", "M. Kleppmann", 616, 310, "In Progress", 0, "#6B8EC7"),
+        new("Atomic Habits", "J. Clear", 320, 0, "To Start", 0, "#5B8C51"),
+        new("Pragmatic Programmer", "Hunt & Thomas", 352, 200, "In Progress", 0, "#C49A2D")
     };
-
-    private record BookItem(string Title, string Author, int Pages, int Current, string Status, int Rating, string Genre);
 }

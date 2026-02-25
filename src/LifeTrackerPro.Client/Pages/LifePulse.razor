@@ -1,0 +1,89 @@
+@page "/life-pulse"
+
+<PageTitle>Life Pulse — LifeTracker Pro</PageTitle>
+
+<div class="page-enter">
+    <h1 class="lt-page-heading">Life <span class="accent">Pulse</span></h1>
+    <p class="lt-page-subtitle">Holistic wellness score — how every dimension of life connects</p>
+
+    <div style="display:grid; grid-template-columns:280px 1fr; gap:20px; margin-bottom:28px;">
+        <!-- Overall Score -->
+        <div class="lt-card accent" style="text-align:center; padding:32px;">
+            <svg width="180" height="180" viewBox="0 0 180 180" style="margin:0 auto; display:block;">
+                <circle cx="90" cy="90" r="78" fill="none" stroke="var(--pampas)" stroke-width="12" />
+                <circle cx="90" cy="90" r="78" fill="none" stroke="var(--crail)" stroke-width="12"
+                        stroke-dasharray="@((int)(_overallScore / 100.0 * 490)) 490"
+                        stroke-linecap="round" transform="rotate(-90 90 90)"
+                        style="transition:stroke-dasharray 2s cubic-bezier(0.16,1,0.3,1); filter:drop-shadow(0 0 12px rgba(193,95,60,0.25));" />
+                <text x="90" y="82" text-anchor="middle" fill="var(--ink)" font-size="48" font-weight="700"
+                      font-family="'Libre Baskerville',serif">@_overallScore</text>
+                <text x="90" y="106" text-anchor="middle" fill="var(--ink-muted)" font-size="12"
+                      font-family="'JetBrains Mono',monospace">/ 100</text>
+            </svg>
+            <div style="font-size:11px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-top:14px;">
+                Overall Life Score
+            </div>
+        </div>
+
+        <!-- Dimension Scores -->
+        <div class="lt-card">
+            <div class="lt-section-label"><span>Dimension Scores</span></div>
+            <div style="display:grid; gap:14px;">
+                @foreach (var score in _scores)
+                {
+                    <div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                            <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@score.Label</span>
+                            <span style="font-size:13px; color:@score.Color; font-family:var(--font-mono); font-weight:800;">@score.Value</span>
+                        </div>
+                        <div class="lt-progress-track">
+                            <div class="lt-progress-fill" style="width:@score.Value%; background:@score.Color;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Correlations -->
+    <div class="lt-card">
+        <div class="lt-section-label"><span>Discovered Correlations</span></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            @foreach (var c in _correlations)
+            {
+                <div class="lt-correlation @c.Type">
+                    <div style="font-size:12px; color:var(--ink); font-family:var(--font-sans); font-weight:700; margin-bottom:4px;">When @c.Condition</div>
+                    <div style="font-size:13px; font-family:var(--font-mono); font-weight:700;
+                                color:@(c.Type == "positive" ? "var(--success)" : c.Type == "negative" ? "var(--danger)" : "var(--ink-soft)");">
+                        @c.Result
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private record DimensionScore(string Label, int Value, string Color);
+    private record Correlation(string Condition, string Result, string Type);
+
+    private readonly List<DimensionScore> _scores = new()
+    {
+        new("Sleep Quality", 82, "#6B8EC7"),
+        new("Physical Activity", 68, "#5B8C51"),
+        new("Productivity", 78, "#C15F3C"),
+        new("Social Balance", 55, "#5CAFC7"),
+        new("Financial Health", 91, "#C49A2D"),
+        new("Learning", 42, "#8E6BC7")
+    };
+
+    private int _overallScore => (int)Math.Round(_scores.Average(s => s.Value));
+
+    private readonly List<Correlation> _correlations = new()
+    {
+        new("Sleep ≥ 8h", "Productivity ▲ 23%", "positive"),
+        new("Exercise days", "Mood ▲ 31%", "positive"),
+        new("Spend > $50/day", "Stress ▲ 18%", "negative"),
+        new("Social < 1h", "Focus ▲ 15%", "neutral")
+    };
+}

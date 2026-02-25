@@ -1,0 +1,70 @@
+@page "/habits"
+
+<PageTitle>Habits — LifeTracker Pro</PageTitle>
+
+<div class="page-enter">
+    <h1 class="lt-page-heading">Habit <span class="accent">Tracker</span></h1>
+    <p class="lt-page-subtitle">Build consistency — every checked day compounds into transformation</p>
+
+    <!-- Stats -->
+    <div class="lt-grid-3" style="margin-bottom:28px;">
+        <div class="lt-card">
+            <div class="lt-stat-label">Active Habits</div>
+            <div class="lt-stat-value">6</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Best Streak</div>
+            <div class="lt-stat-value">12 days</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Completion Rate</div>
+            <div class="lt-stat-value">71%</div>
+        </div>
+    </div>
+
+    <!-- Heatmap -->
+    <div class="lt-card" style="overflow-x:auto;">
+        <div class="lt-section-label"><span>January Heatmap</span></div>
+        <div style="display:grid; gap:6px; min-width:600px;">
+            <!-- Day numbers header -->
+            <div style="display:grid; grid-template-columns:130px repeat(28, 1fr); gap:3px; align-items:center;">
+                <div></div>
+                @for (int d = 1; d <= 28; d++)
+                {
+                    <div style="text-align:center; font-size:8px; color:var(--ink-faint); font-family:var(--font-mono); font-weight:600;">@d</div>
+                }
+            </div>
+
+            @foreach (var habit in _habits)
+            {
+                <div style="display:grid; grid-template-columns:130px repeat(28, 1fr); gap:3px; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@habit.Name</span>
+                        <span style="font-size:9px; color:var(--crail); font-family:var(--font-mono); font-weight:700;">@(habit.Streak)d</span>
+                    </div>
+                    @for (int i = 0; i < habit.Data.Length; i++)
+                    {
+                        var v = habit.Data[i];
+                        var intensity = v ? 0.2 + 0.8 * (i / 28.0) : 0.5;
+                        <div class="lt-heatmap-cell @(v ? "filled" : "empty")"
+                             style="opacity:@intensity.ToString("F2");@(v && i > 24 ? " box-shadow:0 0 6px rgba(193,95,60,0.19);" : "")"></div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private record HabitInfo(string Name, int Streak, bool[] Data);
+
+    private readonly List<HabitInfo> _habits = new()
+    {
+        new("Meditate", 12, new[] { true, true, true, false, true, true, true, true, false, true, true, true, true, true, false, false, true, true, true, true, true, false, true, true, true, true, true, true }),
+        new("No Sugar", 5, new[] { false, false, true, true, false, false, true, true, true, false, true, true, false, false, true, true, true, true, false, true, true, false, false, true, true, true, true, true }),
+        new("Read 30min", 8, new[] { true, true, false, true, true, true, false, false, true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, true, true, true, true, true }),
+        new("Exercise", 5, new[] { true, false, true, false, true, true, false, true, false, true, true, false, true, false, true, true, false, true, true, false, true, false, true, true, true, true, true, true }),
+        new("Journal", 3, new[] { false, false, false, true, false, false, true, false, false, true, false, true, false, false, true, true, false, false, true, false, true, false, true, false, false, true, true, true }),
+        new("No Phone Before Bed", 7, new[] { true, true, false, false, true, true, true, false, true, true, false, true, true, true, false, true, true, true, true, false, true, true, true, true, true, true, true, true })
+    };
+}

@@ -1,196 +1,124 @@
-@page "/"
 @page "/dashboard"
 @inject DashboardService DashboardSvc
-@inject CategoryService CategorySvc
 
 <PageTitle>Dashboard — LifeTracker Pro</PageTitle>
 
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-    <div>
-        <h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Dashboard</h2>
-        <p class="subtitle-text" style="margin:0;">Your life at a glance</p>
+<div class="page-enter">
+    <!-- Heading -->
+    <h1 class="lt-page-heading">Your <span class="accent">Dashboard</span></h1>
+    <p class="lt-page-subtitle">Analytics, trends, and life insights at a glance</p>
+
+    <!-- KPI Row -->
+    <div class="lt-kpi-grid">
+        <div class="lt-card">
+            <div class="lt-stat-label">Days Logged</div>
+            <div class="lt-stat-value">28</div>
+            <div class="lt-stat-delta">▲ 4 this week</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Total Hours</div>
+            <div class="lt-stat-value">664<span class="unit">h</span></div>
+            <div class="lt-stat-delta">100% coverage</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Avg Sleep</div>
+            <div class="lt-stat-value">8.8<span class="unit">h</span></div>
+            <div class="lt-stat-delta">▲ 0.3h</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Spent</div>
+            <div class="lt-stat-value">$373</div>
+            <div class="lt-stat-delta">Under budget</div>
+        </div>
     </div>
-    <div style="display:flex; gap:6px;">
-        @foreach (var p in new[] { "week", "month", "year" })
-        {
-            var period = p;
-            <button @onclick="@(() => LoadData(period))"
-                    style="padding:6px 14px; border-radius:8px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; text-transform:capitalize; transition:all 0.15s; border:1px solid @(_period == period ? "rgba(99,102,241,0.3)" : "rgba(148,163,184,0.1)"); background:@(_period == period ? "rgba(99,102,241,0.15)" : "transparent"); color:@(_period == period ? "#a5b4fc" : "#64748b");">
-                @period
-            </button>
-        }
+
+    <!-- Distribution & By Category -->
+    <div class="lt-chart-grid-2">
+        <div class="lt-card">
+            <div class="lt-section-label"><span>Distribution</span></div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding:16px 0;">
+                @foreach (var (name, hours, color) in _distribution)
+                {
+                    <div style="text-align:center;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:@(color)18; border:3px solid @color; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;">
+                            <span style="font-family:var(--font-mono); font-size:12px; font-weight:800; color:@color;">@hours</span>
+                        </div>
+                        <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@name</span>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-section-label"><span>By Category</span></div>
+            @foreach (var (name, hours, color) in _distribution)
+            {
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="font-size:12px; color:var(--ink-soft); font-family:var(--font-sans); font-weight:600;">@name</span>
+                        <span style="font-size:12px; color:@color; font-family:var(--font-mono); font-weight:700;">@hours h</span>
+                    </div>
+                    <div class="lt-progress-track">
+                        <div class="lt-progress-fill" style="width:@(Math.Min(hours * 100 / 200, 100))%; background:@color;"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Weekly Trends -->
+    <div class="lt-card" style="margin-bottom:22px;">
+        <div class="lt-section-label"><span>Weekly Trends</span></div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+            @foreach (var week in _weeklyTrends)
+            {
+                <div style="text-align:center; padding:14px; border-radius:12px; background:var(--pampas); border:1px solid var(--border);">
+                    <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">@week.Label</div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        <div>
+                            <div style="font-size:9px; color:#6B8EC7; font-family:var(--font-mono); margin-bottom:2px;">Sleep</div>
+                            <div class="lt-progress-track" style="height:5px;">
+                                <div class="lt-progress-fill" style="width:@(week.Sleep * 100 / 70)%; background:#6B8EC7;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:9px; color:var(--crail); font-family:var(--font-mono); margin-bottom:2px;">Work</div>
+                            <div class="lt-progress-track" style="height:5px;">
+                                <div class="lt-progress-fill" style="width:@(week.Work * 100 / 70)%; background:var(--crail);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:9px; color:#5B8C51; font-family:var(--font-mono); margin-bottom:2px;">Exercise</div>
+                            <div class="lt-progress-track" style="height:5px;">
+                                <div class="lt-progress-fill" style="width:@(week.Exercise * 100 / 70)%; background:#5B8C51;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 </div>
 
-@if (_loading)
-{
-    <div style="text-align:center; padding:40px;">
-        <span class="spin" style="color:#6366f1; font-size:24px;">⟳</span>
-        <p style="color:#64748b; font-size:13px; margin-top:8px;">Loading dashboard...</p>
-    </div>
-}
-else if (_dashboard is not null)
-{
-    <!-- KPI Cards Row -->
-    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:24px;">
-        <div class="metric-card kpi-card">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                <span class="metric-label">Hours Logged</span>
-            </div>
-            <div class="metric-value" style="font-family:'Space Mono',monospace;">@_dashboard.TotalLoggedHours</div>
-        </div>
-        <div class="metric-card kpi-card">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                <span class="metric-label">Total Spent</span>
-            </div>
-            <div class="metric-value" style="font-family:'Space Mono',monospace;">₹@_dashboard.TotalSpent.ToString("N0")</div>
-        </div>
-        <div class="metric-card kpi-card">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M13 2L3 14h9l-1 8L21 10h-9l1-8z"/></svg>
-                <span class="metric-label">Day Streak</span>
-            </div>
-            <div class="metric-value" style="font-family:'Space Mono',monospace;">@_dashboard.CurrentStreak 🔥</div>
-        </div>
-        <div class="metric-card kpi-card">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span class="metric-label">Days Logged</span>
-            </div>
-            <div class="metric-value" style="font-family:'Space Mono',monospace;">@_dashboard.DaysLogged</div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
-        <!-- Hours by Category (Horizontal Bar) -->
-        <div class="chart-card">
-            <div class="chart-title">Hours by Category</div>
-            @if (_dashboard.HoursPerCategory.Any())
-            {
-                @foreach (var cat in _dashboard.HoursPerCategory.OrderByDescending(c => c.Hours).Take(10))
-                {
-                    var maxHours = _dashboard.HoursPerCategory.Max(c => c.Hours);
-                    var widthPct = maxHours > 0 ? (cat.Hours / maxHours) * 100 : 0;
-
-                    <div style="margin-bottom:10px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <div style="width:8px; height:8px; border-radius:50%; background:@cat.Color;"></div>
-                                <span style="color:#e2e8f0; font-size:12px; font-family:'DM Sans',sans-serif;">@cat.CategoryName</span>
-                            </div>
-                            <span style="color:#94a3b8; font-size:11px; font-family:'Space Mono',monospace;">@cat.Hours h (@cat.Percentage%)</span>
-                        </div>
-                        <div class="lt-progress-bar">
-                            <div class="lt-progress-fill" style="width:@widthPct%; background:@cat.Color;"></div>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <p style="color:#64748b; font-size:13px;">No data for this period.</p>
-            }
-        </div>
-
-        <!-- Spend Summary -->
-        <div class="chart-card">
-            <div class="chart-title">Spend Summary</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
-                <div class="metric-card">
-                    <span class="metric-label">Total Spent</span>
-                    <span class="metric-value" style="font-size:16px; font-family:'Space Mono',monospace;">₹@_dashboard.SpendSummary.TotalSpent.ToString("N0")</span>
-                </div>
-                <div class="metric-card">
-                    <span class="metric-label">Daily Average</span>
-                    <span class="metric-value" style="font-size:16px; font-family:'Space Mono',monospace;">₹@_dashboard.SpendSummary.AverageDaily.ToString("N0")</span>
-                </div>
-                @if (_dashboard.SpendSummary.BudgetRemaining.HasValue)
-                {
-                    <div class="metric-card">
-                        <span class="metric-label">Budget Left</span>
-                        <span class="metric-value" style="font-size:16px; font-family:'Space Mono',monospace; color:@(_dashboard.SpendSummary.BudgetRemaining >= 0 ? "#22c55e" : "#ef4444");">
-                            ₹@_dashboard.SpendSummary.BudgetRemaining.Value.ToString("N0")
-                        </span>
-                    </div>
-                }
-            </div>
-
-            @if (_dashboard.SpendSummary.BudgetRemaining.HasValue && _dashboard.SpendSummary.TotalSpent > 0)
-            {
-                <div style="margin-top:12px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <span style="color:#94a3b8; font-size:11px;">Budget Usage</span>
-                        <span style="color:#94a3b8; font-size:11px; font-family:'Space Mono',monospace;">
-                            @{
-                                var budgetTotal = _dashboard.SpendSummary.TotalSpent + (_dashboard.SpendSummary.BudgetRemaining ?? 0);
-                                var budgetPct = budgetTotal > 0 ? (_dashboard.SpendSummary.TotalSpent / budgetTotal) * 100 : 0;
-                            }
-                            @budgetPct.ToString("F0")%
-                        </span>
-                    </div>
-                    <div class="lt-progress-bar" style="height:8px;">
-                        <div class="lt-progress-fill" style="width:@budgetPct%; background:@(budgetPct > 80 ? "#ef4444" : budgetPct > 60 ? "#eab308" : "#22c55e");"></div>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Category Legend -->
-    <div class="glass-card">
-        <div class="chart-title">Category Legend</div>
-        <div style="display:flex; flex-wrap:wrap; gap:12px;">
-            @foreach (var cat in _dashboard.HoursPerCategory)
-            {
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <div style="width:10px; height:10px; border-radius:50%; background:@cat.Color;"></div>
-                    <span style="color:#e2e8f0; font-size:12px; font-family:'DM Sans',sans-serif;">@cat.CategoryName</span>
-                    <span style="color:#475569; font-size:10px; font-family:'Space Mono',monospace;">@cat.Percentage%</span>
-                </div>
-            }
-        </div>
-    </div>
-}
-else
-{
-    <!-- Empty State -->
-    <div style="text-align:center; padding:60px 20px;">
-        <div style="width:64px; height:64px; border-radius:16px; background:rgba(99,102,241,0.1); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-        <h3 style="color:#f1f5f9; font-size:18px; font-weight:600; font-family:'DM Sans',sans-serif; margin:0 0 8px;">No Data Yet</h3>
-        <p style="color:#64748b; font-size:13px; font-family:'DM Sans',sans-serif;">Log your first day to see dashboard insights!</p>
-        <a href="/daily-log" class="lt-btn lt-btn-primary" style="display:inline-flex; margin-top:16px; text-decoration:none;">
-            Start Logging
-        </a>
-    </div>
-}
-
 @code {
-    private DashboardDto? _dashboard;
-    private string _period = "week";
-    private bool _loading = true;
-
-    protected override async Task OnInitializedAsync()
+    private readonly List<(string Name, int Hours, string Color)> _distribution = new()
     {
-        await LoadData("week");
-    }
+        ("Sleep", 196, "#6B8EC7"),
+        ("Work", 176, "#C15F3C"),
+        ("Exercise", 84, "#5B8C51"),
+        ("Hobbies", 60, "#C49A2D"),
+        ("Social", 52, "#5CAFC7"),
+        ("Friends", 40, "#4A7EC7"),
+        ("Travel", 28, "#B1ADA1"),
+        ("Other", 28, "#D4795A")
+    };
 
-    private async Task LoadData(string period)
+    private readonly List<WeekData> _weeklyTrends = new()
     {
-        _period = period;
-        _loading = true;
-        try
-        {
-            _dashboard = await DashboardSvc.GetAsync(period);
-        }
-        catch { /* handle offline */ }
-        finally
-        {
-            _loading = false;
-        }
-    }
+        new("W1", 52, 42, 8),
+        new("W2", 55, 40, 12),
+        new("W3", 48, 35, 10),
+        new("W4", 58, 45, 14)
+    };
+
+    private record WeekData(string Label, int Sleep, int Work, int Exercise);
 }

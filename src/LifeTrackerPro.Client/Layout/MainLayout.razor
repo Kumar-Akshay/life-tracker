@@ -4,95 +4,85 @@
 
 @if (AuthState.IsAuthenticated)
 {
-    <div style="min-height: 100vh; background: #0c0a1a; display: flex;">
-        <!-- Custom Sidebar -->
+    <div class="lt-app-shell">
+        <!-- ── Sidebar ── -->
         <nav class="lt-sidebar">
             <!-- Brand -->
             <div class="lt-sidebar-brand">
-                <div class="brand-icon"><span>L</span></div>
+                <div class="lt-sidebar-logo"><span>L</span></div>
                 <div>
-                    <span class="brand-name">LifeTracker</span>
-                    <span class="brand-pro">PRO</span>
+                    <div class="lt-sidebar-title">LifeTracker</div>
+                    <div class="lt-sidebar-subtitle">PRO</div>
                 </div>
             </div>
 
-            <!-- Navigation Items -->
-            <a href="/daily-log" class="lt-nav-btn @(IsActive("/daily-log") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                </span>
-                Logger
-            </a>
-            <a href="/dashboard" class="lt-nav-btn @(IsActive("/dashboard") || IsActive("/") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                </span>
-                Dashboard
-            </a>
-            <a href="/spending" class="lt-nav-btn @(IsActive("/spending") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                </span>
-                Spending
-            </a>
-            <a href="/goals" class="lt-nav-btn @(IsActive("/goals") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                </span>
-                Goals
-            </a>
-            <a href="/productivity" class="lt-nav-btn @(IsActive("/productivity") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
-                </span>
-                Productivity
-            </a>
-            <a href="/videos" class="lt-nav-btn @(IsActive("/videos") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
-                </span>
-                Videos
-            </a>
-            <a href="/books" class="lt-nav-btn @(IsActive("/books") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                </span>
-                Books
-            </a>
-            <a href="/settings" class="lt-nav-btn @(IsActive("/settings") ? "active" : "")">
-                <span class="nav-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                </span>
-                Settings
-            </a>
+            <!-- Navigation -->
+            <div class="lt-nav">
+                <NavLink class="lt-nav-item" href="dashboard" Match="NavLinkMatch.All" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.GridView" Size="Size.Small" />
+                    <span>Dashboard</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="daily-log" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.EditCalendar" Size="Size.Small" />
+                    <span>Daily Logger</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="spending" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.AttachMoney" Size="Size.Small" />
+                    <span>Spending</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="goals" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.TrackChanges" Size="Size.Small" />
+                    <span>Goals</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="life-pulse" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.MonitorHeart" Size="Size.Small" />
+                    <span>Life Pulse</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="habits" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.CheckCircle" Size="Size.Small" />
+                    <span>Habits</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="weekly-review" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.RateReview" Size="Size.Small" />
+                    <span>Review</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="productivity" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.Bolt" Size="Size.Small" />
+                    <span>Productivity</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="videos" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.PlayCircle" Size="Size.Small" />
+                    <span>Videos</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="books" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.MenuBook" Size="Size.Small" />
+                    <span>Books</span>
+                </NavLink>
+                <NavLink class="lt-nav-item" href="settings" Match="NavLinkMatch.Prefix" ActiveClass="active">
+                    <MudIcon Icon="@Icons.Material.Outlined.Settings" Size="Size.Small" />
+                    <span>Settings</span>
+                </NavLink>
+            </div>
 
-            <!-- Spacer + User Card -->
-            <div style="flex: 1;"></div>
+            <!-- User Card -->
             <div class="lt-sidebar-user">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; color: #818cf8;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
+                <div class="lt-sidebar-user-inner">
+                    <div class="lt-sidebar-avatar">@(_initials)</div>
                     <div>
-                        <div style="color: #e2e8f0; font-size: 12px; font-weight: 600; font-family: 'DM Sans', sans-serif;">
-                            @(AuthState.CurrentUser?.FullName ?? "User")
-                        </div>
-                        <div style="color: #64748b; font-size: 10px; font-family: 'DM Sans', sans-serif;">Life Tracker Pro</div>
+                        <div class="lt-sidebar-user-name">@(AuthState.CurrentUser?.FullName ?? "User")</div>
+                        <div class="lt-sidebar-user-streak">Tracking life 🔥</div>
                     </div>
-                    <div style="margin-left: auto;">
-                        <button @onclick="HandleLogout" style="background: none; border: none; color: #64748b; cursor: pointer; padding: 4px;" title="Logout">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        </button>
+                    <div style="margin-left:auto;">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Logout" Size="Size.Small"
+                                       Style="color:var(--ink-faint);" OnClick="HandleLogout" />
                     </div>
                 </div>
             </div>
         </nav>
 
-        <!-- Main Content Area -->
-        <main class="lt-main" style="flex: 1;">
-            <div class="page-transition">
-                @Body
-            </div>
+        <!-- ── Main Content ── -->
+        <main class="lt-main page-enter">
+            @Body
         </main>
     </div>
 }
@@ -102,15 +92,9 @@ else
 }
 
 @code {
-    private bool IsActive(string href)
-    {
-        var uri = Nav.ToBaseRelativePath(Nav.Uri);
-        if (string.IsNullOrEmpty(uri)) uri = "/";
-        else uri = "/" + uri;
-
-        return uri.Equals(href, StringComparison.OrdinalIgnoreCase)
-            || uri.StartsWith(href + "/", StringComparison.OrdinalIgnoreCase);
-    }
+    private string _initials => AuthState.CurrentUser?.FullName?.Length > 0
+        ? AuthState.CurrentUser.FullName[..1].ToUpper()
+        : "U";
 
     private async Task HandleLogout()
     {

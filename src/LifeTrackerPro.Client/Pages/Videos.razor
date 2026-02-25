@@ -1,0 +1,86 @@
+@page "/videos"
+
+<PageTitle>Videos — LifeTracker Pro</PageTitle>
+
+<div class="page-enter">
+    <h1 class="lt-page-heading">Video <span class="accent">Learning</span></h1>
+    <p class="lt-page-subtitle">Curate your learning journey with purpose</p>
+
+    <!-- Stats -->
+    <div class="lt-kpi-grid" style="margin-bottom:24px;">
+        <div class="lt-card">
+            <div class="lt-stat-label">Videos</div>
+            <div class="lt-stat-value">5</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">In Progress</div>
+            <div class="lt-stat-value">2</div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Hours</div>
+            <div class="lt-stat-value">23.5<span class="unit">h</span></div>
+        </div>
+        <div class="lt-card">
+            <div class="lt-stat-label">Streak</div>
+            <div class="lt-stat-value">3 days</div>
+        </div>
+    </div>
+
+    <!-- Kanban Columns -->
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;">
+        @foreach (var column in _kanban)
+        {
+            <div class="lt-card">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                    <div style="width:9px; height:9px; border-radius:50%; background:@column.StatusColor;"></div>
+                    <span style="font-size:11px; color:var(--ink-soft); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">@column.Status</span>
+                </div>
+                @foreach (var item in column.Items)
+                {
+                    <div style="padding:14px; border-radius:12px; background:var(--pampas); margin-bottom:8px; border:1px solid var(--border);">
+                        <div style="font-size:13px; font-weight:700; color:var(--ink); font-family:var(--font-sans); margin-bottom:4px;">@item.Title</div>
+                        <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); margin-bottom:8px;">@item.Platform · @item.Duration</div>
+                        @if (item.Progress != null)
+                        {
+                            <div style="margin-bottom:8px;">
+                                <div class="lt-progress-track" style="height:5px;">
+                                    <div class="lt-progress-fill crail" style="width:@item.Progress%;"></div>
+                                </div>
+                                <span style="font-size:9px; color:var(--ink-muted); font-family:var(--font-mono);">@item.Progress%</span>
+                            </div>
+                        }
+                        <div style="display:flex; gap:4px;">
+                            @foreach (var tag in item.Tags)
+                            {
+                                <span class="lt-tag crail">@tag</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private record VideoItem(string Title, string Platform, string Duration, int? Progress, string[] Tags);
+    private record KanbanColumn(string Status, string StatusColor, List<VideoItem> Items);
+
+    private readonly List<KanbanColumn> _kanban = new()
+    {
+        new("To Start", "#7A7570", new List<VideoItem>
+        {
+            new("System Design Interview", "YouTube", "2h 30m", null, new[] { "Architecture" }),
+            new("Advanced PostgreSQL", "Udemy", "8h", null, new[] { "Database" })
+        }),
+        new("In Progress", "#C49A2D", new List<VideoItem>
+        {
+            new("Clean Architecture .NET", "Pluralsight", "4h", 65, new[] { "C#" }),
+            new("Blazor Deep Dive", "YouTube", "3h", 30, new[] { "Blazor" })
+        }),
+        new("Completed", "#5B8C51", new List<VideoItem>
+        {
+            new("Docker Fundamentals", "Udemy", "6h", null, new[] { "DevOps" })
+        })
+    };
+}

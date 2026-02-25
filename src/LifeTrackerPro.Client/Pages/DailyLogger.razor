@@ -1,296 +1,213 @@
 @page "/daily-log"
-@page "/daily-log/{DateParam}"
-@inject DailyLogService DailyLogSvc
-@inject CategoryService CategorySvc
-@inject ISnackbar Snackbar
+@inject DailyLogService LogSvc
+@inject CategoryService CatSvc
 
 <PageTitle>Daily Logger — LifeTracker Pro</PageTitle>
 
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-    <div>
-        <h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Daily Logger</h2>
-        <p class="subtitle-text" style="margin:0;">Log your activities for each hour of the day</p>
-    </div>
-    <div style="display:flex; gap:8px;">
-        <button @onclick="GoToday" class="lt-btn lt-btn-ghost" style="font-size:12px; padding:8px 14px;">Today</button>
-        <button @onclick="SaveLog" disabled="@_saving" class="lt-btn lt-btn-primary" style="font-size:12px; padding:8px 14px;">
-            @if (_saving) { <span class="spin">⟳</span> }
-            Save Log
-        </button>
-    </div>
-</div>
+<div class="page-enter">
+    <!-- Heading -->
+    <h1 class="lt-page-heading">Daily <span class="accent">Logger</span></h1>
+    <p class="lt-page-subtitle">Map every hour — your time, your story</p>
 
-<!-- Day Selector -->
-<div class="day-selector">
-    <button @onclick="PrevWeek" style="padding:8px 10px; border-radius:8px; background:rgba(15,23,42,0.5); border:1px solid rgba(148,163,184,0.1); color:#94a3b8; cursor:pointer; font-size:12px;">◀</button>
-    @for (int d = -6; d <= 0; d++)
-    {
-        var dayOffset = d;
-        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(dayOffset);
-        var isSelected = date == _selectedDate;
-        <button @onclick="@(() => SelectDate(date))"
-                class="day-chip @(isSelected ? "active" : "")">
-            <div style="font-size:10px; color:@(isSelected ? "#a5b4fc" : "#64748b");">@date.ToString("ddd")</div>
-            <div style="font-weight:600;">@date.Day</div>
-        </button>
-    }
-    <button @onclick="NextWeek" style="padding:8px 10px; border-radius:8px; background:rgba(15,23,42,0.5); border:1px solid rgba(148,163,184,0.1); color:#94a3b8; cursor:pointer; font-size:12px;"
-            disabled="@(_selectedDate >= DateOnly.FromDateTime(DateTime.Now))">▶</button>
-</div>
-
-@if (_loading)
-{
-    <div style="text-align:center; padding:40px;">
-        <span class="spin" style="color:#6366f1; font-size:24px;">⟳</span>
-        <p style="color:#64748b; font-size:13px; margin-top:8px;">Loading...</p>
-    </div>
-}
-else
-{
-    <!-- 24-Hour Time Grid (2 rows of 12) -->
-    <div class="glass-card" style="margin-bottom:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <span style="color:#94a3b8; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif;">24-Hour Timeline</span>
-            <span style="color:#475569; font-size:11px; font-family:'Space Mono',monospace;">@_selectedDate.ToString("ddd, dd MMM yyyy")</span>
-        </div>
-        <div class="time-grid" style="margin-bottom:6px;">
-            @for (int i = 0; i < 12; i++)
-            {
-                var hour = i;
-                var slotValue = hour < _hourSlots.Count ? _hourSlots[hour] : "";
-                var cat = _categories.FirstOrDefault(c => c.Letter == slotValue || c.Code == slotValue);
-                var bgColor = cat != null ? cat.Color : "";
-                var letter = cat?.Letter ?? "";
-                var isEmpty = string.IsNullOrEmpty(slotValue);
-
-                <div @onclick="@(() => OpenCategoryPicker(hour))"
-                     class="time-slot @(isEmpty ? "time-slot-empty" : "")"
-                     style="@(isEmpty ? "" : $"background:{bgColor};")">
-                    <span class="time-label">@hour.ToString("00"):00</span>
-                    <span class="time-letter">@letter</span>
-                </div>
-            }
-        </div>
-        <div class="time-grid">
-            @for (int i = 12; i < 24; i++)
-            {
-                var hour = i;
-                var slotValue = hour < _hourSlots.Count ? _hourSlots[hour] : "";
-                var cat = _categories.FirstOrDefault(c => c.Letter == slotValue || c.Code == slotValue);
-                var bgColor = cat != null ? cat.Color : "";
-                var letter = cat?.Letter ?? "";
-                var isEmpty = string.IsNullOrEmpty(slotValue);
-
-                <div @onclick="@(() => OpenCategoryPicker(hour))"
-                     class="time-slot @(isEmpty ? "time-slot-empty" : "")"
-                     style="@(isEmpty ? "" : $"background:{bgColor};")">
-                    <span class="time-label">@hour.ToString("00"):00</span>
-                    <span class="time-letter">@letter</span>
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Category Legend -->
-    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px;">
-        @foreach (var cat in _categories.Where(c => !c.IsArchived).Take(12))
+    <!-- Day Selector -->
+    <div class="lt-day-selector">
+        @foreach (var day in _days)
         {
-            <div style="display:flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; background:rgba(15,23,42,0.4); border:1px solid rgba(148,163,184,0.06);">
-                <div style="width:8px; height:8px; border-radius:50%; background:@cat.Color;"></div>
-                <span style="font-size:10px; color:#94a3b8; font-family:'DM Sans',sans-serif;">@cat.Letter · @cat.Name</span>
+            <div class="lt-day-pill @(day.Date == _selectedDate ? "active" : "")"
+                 @onclick="() => SelectDay(day.Date)">
+                <div class="day-name">@day.Date.ToString("ddd").ToUpper()</div>
+                <div class="day-num">@day.Date.Day</div>
             </div>
         }
     </div>
 
-    <!-- Metadata Row -->
-    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:16px;">
-        <div class="metric-card">
-            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Weight (kg)</label>
-            <input @bind="_weight" type="number" step="0.1" placeholder="0.0"
-                   style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#f1f5f9; font-size:16px; font-family:'Space Mono',monospace; font-weight:700; outline:none;"
-                   onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'" />
-        </div>
-        <div class="metric-card">
-            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Spent (₹)</label>
-            <input @bind="_amountSpent" type="number" step="0.01" placeholder="0.00"
-                   style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#f1f5f9; font-size:16px; font-family:'Space Mono',monospace; font-weight:700; outline:none;"
-                   onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'" />
-        </div>
-        <div class="metric-card">
-            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Productive Hours</label>
-            <input @bind="_productivityScore" type="number" min="0" max="24" placeholder="0"
-                   style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#f1f5f9; font-size:16px; font-family:'Space Mono',monospace; font-weight:700; outline:none;"
-                   onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'" />
+    <!-- Auto-Fill & Date -->
+    <div class="lt-card" style="margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:22px; font-weight:700; color:var(--ink); font-family:var(--font-serif);">
+                    @_selectedDate.ToString("dddd, MMMM d")
+                </div>
+                <div style="font-size:11px; color:var(--ink-muted); font-family:var(--font-mono); margin-top:4px;">
+                    @(_filledCount) / 24 hours mapped
+                </div>
+            </div>
+            <button class="lt-autofill-btn" @onclick="AutoFill">
+                ✦ Auto-Fill
+            </button>
         </div>
     </div>
 
-    <!-- Highlight Card -->
-    <div class="highlight-card" style="margin-bottom:16px;">
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#818cf8;"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg>
-            <span style="color:#a5b4fc; font-size:12px; font-weight:600; font-family:'DM Sans',sans-serif;">Highlight of the Day</span>
+    <!-- 24-Hour Grid (2 rows × 12) -->
+    <div class="lt-card" style="margin-bottom:20px;">
+        <div class="lt-section-label"><span>AM — 00:00 to 11:00</span></div>
+        <div class="lt-hour-grid" style="margin-bottom:16px;">
+            @for (int h = 0; h < 12; h++)
+            {
+                var hour = h;
+                var cat = _hourData[hour];
+                <div class="lt-hour-cell @(cat == null ? "empty" : "")"
+                     style="@GetCellStyle(cat)"
+                     @onclick="() => OpenCategoryPicker(hour)">
+                    <span class="hour-label">@hour.ToString("00")</span>
+                    @if (cat != null)
+                    {
+                        <span class="cat-letter">@cat.Letter</span>
+                    }
+                </div>
+            }
         </div>
-        <input @bind="_highlight" type="text" placeholder="What was the best part of your day?"
-               style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(99,102,241,0.15); background:rgba(15,23,42,0.3); color:#e2e8f0; font-size:13px; font-family:'DM Sans',sans-serif; outline:none;"
-               onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(99,102,241,0.15)'" />
+
+        <div class="lt-section-label"><span>PM — 12:00 to 23:00</span></div>
+        <div class="lt-hour-grid">
+            @for (int h = 12; h < 24; h++)
+            {
+                var hour = h;
+                var cat = _hourData[hour];
+                <div class="lt-hour-cell @(cat == null ? "empty" : "")"
+                     style="@GetCellStyle(cat)"
+                     @onclick="() => OpenCategoryPicker(hour)">
+                    <span class="hour-label">@hour.ToString("00")</span>
+                    @if (cat != null)
+                    {
+                        <span class="cat-letter">@cat.Letter</span>
+                    }
+                </div>
+            }
+        </div>
     </div>
 
-    <!-- Mood & Notes -->
-    <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px; margin-bottom:20px;">
-        <div class="glass-card">
-            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:8px; display:block;">Mood</label>
-            <div style="display:flex; gap:4px;">
-                @for (int m = 1; m <= 5; m++)
+    <!-- Category Picker (shown when editing) -->
+    @if (_editingHour != null)
+    {
+        <div class="lt-card accent" style="margin-bottom:20px;">
+            <div style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px;">
+                Select category for @_editingHour.Value.ToString("00"):00
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                @foreach (var cat in _categories)
                 {
-                    var mood = m;
-                    <button @onclick="@(() => _moodScore = mood)"
-                            style="width:32px; height:32px; border-radius:8px; border:none; cursor:pointer; font-size:16px; background:@(mood <= _moodScore ? "rgba(239,68,68,0.15)" : "rgba(15,23,42,0.5)"); transition:all 0.15s;">
-                        @(mood <= _moodScore ? "❤️" : "🤍")
+                    <button class="lt-cat-button"
+                            style="background:@(cat.Color)12; border-color:@(cat.Color)28; color:@cat.Color;"
+                            @onclick="() => AssignCategory(_editingHour.Value, cat)">
+                        <span style="margin-right:5px; font-weight:800;">@cat.Letter</span>@cat.Name
                     </button>
                 }
             </div>
         </div>
-        <div class="glass-card">
-            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Notes</label>
-            <textarea @bind="_notes" placeholder="Any additional notes..."
-                      style="width:100%; height:48px; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#e2e8f0; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; resize:none;"
-                      onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'"></textarea>
-        </div>
-    </div>
-}
+    }
 
-<!-- Category Picker Dialog -->
-@if (_pickerOpen)
-{
-    <div style="position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:9999;"
-         @onclick="ClosePicker">
-        <div @onclick:stopPropagation style="width:360px; background:rgba(15,23,42,0.95); border:1px solid rgba(148,163,184,0.15); border-radius:16px; padding:20px; backdrop-filter:blur(20px);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <span style="color:#f1f5f9; font-size:15px; font-weight:600; font-family:'DM Sans',sans-serif;">
-                    Select Category for @_pickerHour:00
-                </span>
-                <button @onclick="ClosePicker" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:18px;">✕</button>
+    <!-- Stats Row -->
+    <div class="lt-grid-3">
+        <div class="lt-card">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <div class="lt-stat-label">Weight</div>
+                    <div class="lt-stat-value">@_weight<span class="unit">kg</span></div>
+                </div>
+                <span style="font-size:24px; opacity:0.15;">⚖</span>
             </div>
-            <div class="category-picker-grid">
-                @foreach (var cat in _categories.Where(c => !c.IsArchived))
-                {
-                    <button @onclick="@(() => SelectCategory(cat))" class="category-pick-btn" style="background:@cat.Color;">
-                        <div class="cat-letter">@cat.Letter</div>
-                        <div class="cat-name">@cat.Name</div>
-                    </button>
-                }
-                <button @onclick="ClearSlot" class="category-pick-btn" style="background:rgba(148,163,184,0.1); border:1px dashed rgba(148,163,184,0.2);">
-                    <div class="cat-letter" style="color:#94a3b8;">✕</div>
-                    <div class="cat-name" style="color:#64748b;">Clear</div>
-                </button>
+        </div>
+        <div class="lt-card">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <div class="lt-stat-label">Spent</div>
+                    <div class="lt-stat-value">$@_spent</div>
+                </div>
+                <span style="font-size:24px; opacity:0.15;">◎</span>
+            </div>
+        </div>
+        <div class="lt-card">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+                <div>
+                    <div class="lt-stat-label">Hours</div>
+                    <div class="lt-stat-value">@_filledCount/24</div>
+                </div>
+                <span style="font-size:24px; opacity:0.15;">●</span>
             </div>
         </div>
     </div>
-}
+
+    <!-- Highlight -->
+    <div class="lt-card accent">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div style="width:3px; height:20px; border-radius:2px; background:var(--crail);"></div>
+            <span style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em;">Highlight</span>
+        </div>
+        <MudTextField @bind-Value="_highlight" Variant="Variant.Text" Placeholder="What was the highlight of your day?"
+                      Style="font-size:19px; color:var(--ink); font-family:var(--font-serif); font-style:italic;" />
+    </div>
+</div>
 
 @code {
-    [Parameter] public string? DateParam { get; set; }
+    private DateTime _selectedDate = DateTime.Today;
+    private int? _editingHour;
+    private string _highlight = "";
+    private decimal _weight = 76.2m;
+    private decimal _spent = 12m;
 
-    private DateOnly _selectedDate = DateOnly.FromDateTime(DateTime.Now);
-    private List<string> _hourSlots = Enumerable.Repeat("", 24).ToList();
-    private List<CategoryDto> _categories = new();
-    private decimal? _weight;
-    private decimal? _amountSpent;
-    private string? _highlight;
-    private int _moodScore;
-    private int? _productivityScore;
-    private string? _notes;
-    private bool _loading = true;
-    private bool _saving;
-    private bool _pickerOpen;
-    private int _pickerHour;
+    private readonly CategoryInfo?[] _hourData = new CategoryInfo?[24];
 
-    protected override async Task OnInitializedAsync()
+    private int _filledCount => _hourData.Count(h => h != null);
+
+    private record DayInfo(DateTime Date);
+    private record CategoryInfo(string Name, string Letter, string Color);
+
+    private readonly List<DayInfo> _days = Enumerable.Range(-3, 7)
+        .Select(i => new DayInfo(DateTime.Today.AddDays(i)))
+        .ToList();
+
+    private readonly List<CategoryInfo> _categories = new()
     {
-        if (DateParam is not null && DateOnly.TryParse(DateParam, out var parsed))
-            _selectedDate = parsed;
+        new("Sleep", "S", "#6B8EC7"),
+        new("Work", "W", "#C15F3C"),
+        new("Hobbies", "H", "#C49A2D"),
+        new("Social", "O", "#B1ADA1"),
+        new("Exercise", "E", "#5B8C51"),
+        new("Friends", "F", "#5CAFC7"),
+        new("Book", "B", "#4A7EC7"),
+        new("Partner", "P", "#C76B8E"),
+        new("Family", "A", "#8E6BC7"),
+        new("Productive", "D", "#7BA84A"),
+        new("Travel", "T", "#4AC7A5"),
+        new("Misc", "M", "#D4795A")
+    };
 
-        _categories = await CategorySvc.GetAllAsync();
-        await LoadLog();
+    protected override void OnInitialized()
+    {
+        // Seed sample data
+        for (int h = 0; h < 8; h++) _hourData[h] = _categories[0]; // Sleep
+        for (int h = 9; h < 17; h++) _hourData[h] = _categories[1]; // Work
+        _hourData[17] = _categories[4]; // Exercise
+        _hourData[18] = _categories[4]; // Exercise
+        _hourData[8] = _categories[2]; // Hobbies
+        _hourData[19] = _categories[3]; // Social
+        _hourData[20] = _categories[6]; // Book
     }
 
-    private async Task LoadLog()
+    private void SelectDay(DateTime date) => _selectedDate = date;
+
+    private void OpenCategoryPicker(int hour) => _editingHour = _editingHour == hour ? null : hour;
+
+    private void AssignCategory(int hour, CategoryInfo cat)
     {
-        _loading = true;
-        try
+        _hourData[hour] = cat;
+        _editingHour = null;
+    }
+
+    private void AutoFill()
+    {
+        var rand = new Random();
+        for (int h = 0; h < 24; h++)
         {
-            var log = await DailyLogSvc.GetAsync(_selectedDate);
-            if (log is not null)
-            {
-                _hourSlots = log.HourSlots.Count == 24 ? log.HourSlots : Enumerable.Repeat("", 24).ToList();
-                _weight = log.Weight;
-                _amountSpent = log.AmountSpent;
-                _highlight = log.Highlight;
-                _moodScore = log.MoodScore ?? 0;
-                _productivityScore = log.ProductivityScore;
-                _notes = log.Notes;
-            }
-            else
-            {
-                ResetFields();
-            }
+            if (_hourData[h] == null)
+                _hourData[h] = _categories[rand.Next(_categories.Count)];
         }
-        catch { ResetFields(); }
-        finally { _loading = false; }
     }
 
-    private void ResetFields()
+    private string GetCellStyle(CategoryInfo? cat)
     {
-        _hourSlots = Enumerable.Repeat("", 24).ToList();
-        _weight = null; _amountSpent = null; _highlight = null;
-        _moodScore = 0; _productivityScore = null; _notes = null;
-    }
-
-    private async Task SelectDate(DateOnly date) { _selectedDate = date; await LoadLog(); }
-    private async Task PrevWeek() { _selectedDate = _selectedDate.AddDays(-7); await LoadLog(); }
-    private async Task NextWeek() { _selectedDate = _selectedDate.AddDays(1); await LoadLog(); }
-    private async Task GoToday() { _selectedDate = DateOnly.FromDateTime(DateTime.Now); await LoadLog(); }
-
-    private void OpenCategoryPicker(int hour) { _pickerHour = hour; _pickerOpen = true; }
-    private void ClosePicker() { _pickerOpen = false; }
-
-    private void SelectCategory(CategoryDto cat)
-    {
-        if (_pickerHour >= 0 && _pickerHour < _hourSlots.Count)
-            _hourSlots[_pickerHour] = cat.Letter;
-        _pickerOpen = false;
-    }
-
-    private void ClearSlot()
-    {
-        if (_pickerHour >= 0 && _pickerHour < _hourSlots.Count)
-            _hourSlots[_pickerHour] = "";
-        _pickerOpen = false;
-    }
-
-    private async Task SaveLog()
-    {
-        _saving = true;
-        try
-        {
-            var result = await DailyLogSvc.UpsertAsync(_selectedDate, new UpsertDailyLogRequestDto
-            {
-                Date = _selectedDate,
-                HourSlots = _hourSlots,
-                Weight = _weight,
-                AmountSpent = _amountSpent,
-                Highlight = _highlight,
-                MoodScore = _moodScore > 0 ? _moodScore : null,
-                ProductivityScore = _productivityScore,
-                Notes = _notes
-            });
-
-            Snackbar.Add("Daily log saved!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to save: {ex.Message}", Severity.Error);
-        }
-        finally { _saving = false; }
+        if (cat == null) return "";
+        return $"background:{cat.Color}20; border:1px solid {cat.Color}40; color:{cat.Color};";
     }
 }

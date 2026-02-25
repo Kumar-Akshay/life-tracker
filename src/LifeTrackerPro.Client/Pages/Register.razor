@@ -1,12 +1,90 @@
 @page "/register"
+@inject AuthService Auth
 @inject NavigationManager Nav
+@inject ISnackbar Snackbar
 
 <PageTitle>Register — LifeTracker Pro</PageTitle>
 
+<div class="lt-auth-wrapper">
+    <div class="lt-auth-card">
+        <!-- Brand -->
+        <div class="lt-auth-brand">
+            <div class="lt-auth-brand-logo"><span>L</span></div>
+            <div class="lt-auth-title">Create <span style="color:var(--crail); font-style:italic;">Account</span></div>
+        </div>
+
+        <p class="lt-auth-subtitle">Start tracking every hour of your life</p>
+
+        <MudTextField @bind-Value="_fullName" Label="Full Name" Variant="Variant.Outlined"
+                      Class="mb-3" FullWidth="true"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Person" />
+        <MudTextField @bind-Value="_email" Label="Email" Variant="Variant.Outlined"
+                      InputType="InputType.Email" Class="mb-3" FullWidth="true"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Email" />
+        <MudTextField @bind-Value="_password" Label="Password" Variant="Variant.Outlined"
+                      InputType="InputType.Password" Class="mb-3" FullWidth="true"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Lock" />
+        <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" Variant="Variant.Outlined"
+                      InputType="InputType.Password" Class="mb-4" FullWidth="true"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Outlined.Lock" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                   OnClick="HandleRegister" Disabled="_loading" Class="mb-4"
+                   Style="height:48px; font-size:15px;">
+            @if (_loading) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" /> }
+            Sign Up
+        </MudButton>
+
+        <MudText Typo="Typo.body2" Align="Align.Center" Style="color:var(--ink-muted);">
+            Already have an account?
+            <MudLink Href="/login" Underline="Underline.Always">Sign in</MudLink>
+        </MudText>
+    </div>
+</div>
+
 @code {
-    protected override void OnInitialized()
+    private string _fullName = string.Empty;
+    private string _email = string.Empty;
+    private string _password = string.Empty;
+    private string _confirmPassword = string.Empty;
+    private bool _loading;
+
+    private async Task HandleRegister()
     {
-        // Registration is now handled on the Login page
-        Nav.NavigateTo("/login");
+        if (_password != _confirmPassword)
+        {
+            Snackbar.Add("Passwords do not match.", Severity.Warning);
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var result = await Auth.RegisterAsync(new RegisterRequestDto
+            {
+                Email = _email,
+                Password = _password,
+                FullName = _fullName
+            });
+
+            if (result?.Success == true)
+            {
+                Snackbar.Add("Account created!", Severity.Success);
+                Nav.NavigateTo("/dashboard");
+            }
+            else
+            {
+                foreach (var err in result?.Errors ?? new())
+                    Snackbar.Add(err, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 }

@@ -1,249 +1,111 @@
 @page "/settings"
-@inject CategoryService CategorySvc
 @inject SettingsService SettingsSvc
 @inject ISnackbar Snackbar
 
 <PageTitle>Settings — LifeTracker Pro</PageTitle>
 
-<h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Settings</h2>
-<p class="subtitle-text">Configure your tracking preferences</p>
-
-@if (_loading)
-{
-    <div style="text-align:center; padding:40px;">
-        <span class="spin" style="color:#6366f1; font-size:24px;">⟳</span>
-    </div>
-}
-else
-{
-    <!-- Profile Section -->
-    <div class="settings-section">
-        <h3 class="section-header">Profile</h3>
-        <div class="settings-group">
-            <div class="settings-row">
-                <span class="settings-label">Name</span>
-                <input @bind="_profileName" type="text" placeholder="Your name"
-                       style="text-align:right; padding:4px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.5); color:#94a3b8; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; width:180px;"
-                       onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" />
-            </div>
-            <div class="settings-row">
-                <span class="settings-label">Email</span>
-                <span class="settings-value">@_profileEmail</span>
-            </div>
-            <div class="settings-row">
-                <span class="settings-label">Timezone</span>
-                <input @bind="_timezone" type="text" placeholder="America/New_York"
-                       style="text-align:right; padding:4px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.5); color:#94a3b8; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; width:180px;"
-                       onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.1)'" />
-            </div>
-        </div>
-    </div>
+<div class="page-enter">
+    <h1 class="lt-page-heading">Settings</h1>
+    <p class="lt-page-subtitle">Customize your LifeTracker experience</p>
 
     <!-- Tracking Section -->
-    <div class="settings-section">
-        <h3 class="section-header">Tracking</h3>
-        <div class="settings-group">
-            <div class="settings-row">
-                <span class="settings-label">Time Granularity</span>
-                <select @bind="_timeGranularity"
-                        style="padding:4px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.8); color:#94a3b8; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; cursor:pointer;">
-                    <option value="OneHour">1 Hour</option>
-                    <option value="ThirtyMinutes">30 Min</option>
-                    <option value="FifteenMinutes">15 Min</option>
-                </select>
+    <div style="margin-bottom:24px;">
+        <div class="lt-section-label"><span>Tracking</span></div>
+        <div class="lt-card" style="padding:0; overflow:hidden;">
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Time Granularity</span>
+                <span class="lt-setting-value">1 Hour</span>
             </div>
-            <div class="settings-row">
-                <span class="settings-label">Tracking Period</span>
-                <span class="settings-value">Jan 1 – Dec 31, @DateTime.Now.Year</span>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Period</span>
+                <span class="lt-setting-value">Jan 1 – Dec 31, 2026</span>
             </div>
-            <div class="settings-row">
-                <span class="settings-label">Monthly Budget</span>
-                <span class="settings-value">₹500</span>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Monthly Budget</span>
+                <span class="lt-setting-value">$500</span>
             </div>
         </div>
     </div>
 
     <!-- AI Features Section -->
-    <div class="settings-section">
-        <h3 class="section-header">AI Features</h3>
-        <div class="settings-group">
-            @foreach (var toggle in _aiToggles)
-            {
-                <div class="settings-row">
-                    <span class="settings-label">@toggle.Label</span>
-                    <button @onclick="@(() => ToggleAi(toggle))"
-                            class="lt-toggle @(toggle.Value ? "on" : "off")">
-                        <div class="lt-toggle-knob"></div>
-                    </button>
-                </div>
-            }
+    <div style="margin-bottom:24px;">
+        <div class="lt-section-label"><span>AI Features</span></div>
+        <div class="lt-card" style="padding:0; overflow:hidden;">
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Auto-Fill Logger</span>
+                <button class="lt-toggle @(_autoFill ? "on" : "off")" @onclick="() => _autoFill = !_autoFill">
+                    <div class="lt-toggle-knob"></div>
+                </button>
+            </div>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Smart Suggestions</span>
+                <button class="lt-toggle @(_smartSuggestions ? "on" : "off")" @onclick="() => _smartSuggestions = !_smartSuggestions">
+                    <div class="lt-toggle-knob"></div>
+                </button>
+            </div>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Daily Summary</span>
+                <button class="lt-toggle @(_dailySummary ? "on" : "off")" @onclick="() => _dailySummary = !_dailySummary">
+                    <div class="lt-toggle-knob"></div>
+                </button>
+            </div>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Goal Coaching</span>
+                <button class="lt-toggle @(_goalCoaching ? "on" : "off")" @onclick="() => _goalCoaching = !_goalCoaching">
+                    <div class="lt-toggle-knob"></div>
+                </button>
+            </div>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Confidence</span>
+                <span class="lt-setting-value">70%</span>
+            </div>
         </div>
     </div>
 
     <!-- Notifications Section -->
-    <div class="settings-section">
-        <h3 class="section-header">Notifications</h3>
-        <div class="settings-group">
-            <div class="settings-row">
-                <span class="settings-label">Reminder Interval</span>
-                <span class="settings-value">Every 3 hours</span>
+    <div style="margin-bottom:24px;">
+        <div class="lt-section-label"><span>Notifications</span></div>
+        <div class="lt-card" style="padding:0; overflow:hidden;">
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Interval</span>
+                <span class="lt-setting-value">Every 3 hours</span>
             </div>
-            <div class="settings-row">
-                <span class="settings-label">Quiet Hours</span>
-                <span class="settings-value">11 PM – 7 AM</span>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Quiet Hours</span>
+                <span class="lt-setting-value">11 PM – 7 AM</span>
             </div>
-            <div class="settings-row">
-                <span class="settings-label">Push Notifications</span>
-                <button @onclick="@(() => _pushNotifications = !_pushNotifications)"
-                        class="lt-toggle @(_pushNotifications ? "on" : "off")">
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Push</span>
+                <button class="lt-toggle @(_pushEnabled ? "on" : "off")" @onclick="() => _pushEnabled = !_pushEnabled">
                     <div class="lt-toggle-knob"></div>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Appearance Section -->
-    <div class="settings-section">
-        <h3 class="section-header">Appearance</h3>
-        <div class="settings-group">
-            <div class="settings-row">
-                <span class="settings-label">Theme</span>
-                <select @bind="_theme"
-                        style="padding:4px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.1); background:rgba(15,23,42,0.8); color:#94a3b8; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; cursor:pointer;">
-                    <option value="Dark">Dark</option>
-                    <option value="Light">Light</option>
-                </select>
-            </div>
-        </div>
-    </div>
-
-    <!-- Categories Section -->
-    <div class="settings-section">
-        <h3 class="section-header">Categories</h3>
-        <div class="settings-group">
-            @foreach (var cat in _categories.Where(c => !c.IsArchived))
-            {
-                <div class="settings-row">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:28px; height:28px; border-radius:7px; background:@cat.Color; display:flex; align-items:center; justify-content:center;">
-                            <span style="color:white; font-weight:700; font-size:12px; font-family:'Space Mono',monospace;">@cat.Letter</span>
-                        </div>
-                        <span class="settings-label">@cat.Name</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="color:#475569; font-size:11px; font-family:'Space Mono',monospace;">@cat.Code</span>
-                        <button @onclick="@(() => ArchiveCategory(cat.Id))"
-                                style="background:none; border:none; color:#64748b; cursor:pointer; padding:4px;" title="Archive">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21,8 21,21 3,21 3,8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                        </button>
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-
     <!-- Data Section -->
-    <div class="settings-section">
-        <h3 class="section-header">Data</h3>
-        <div class="settings-group">
-            <div class="settings-row">
-                <span class="settings-label">Export Data</span>
-                <button class="lt-btn lt-btn-ghost" style="font-size:12px; padding:6px 14px;">Excel / CSV / PDF</button>
+    <div style="margin-bottom:24px;">
+        <div class="lt-section-label"><span>Data</span></div>
+        <div class="lt-card" style="padding:0; overflow:hidden;">
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Export</span>
+                <button class="lt-setting-btn" @onclick="HandleExport">Excel / CSV / PDF</button>
             </div>
-            <div class="settings-row">
-                <span class="settings-label">Import from Excel</span>
-                <button class="lt-btn lt-btn-ghost" style="font-size:12px; padding:6px 14px;">Upload .xlsx</button>
+            <div class="lt-setting-row">
+                <span class="lt-setting-label">Import</span>
+                <button class="lt-setting-btn" @onclick="HandleImport">Upload .xlsx</button>
             </div>
         </div>
     </div>
-
-    <!-- Save Button -->
-    <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
-        <button @onclick="SaveAll" class="lt-btn lt-btn-primary">
-            Save Settings
-        </button>
-    </div>
-}
+</div>
 
 @code {
-    private List<CategoryDto> _categories = new();
-    private string _profileName = "User";
-    private string _profileEmail = "user@example.com";
-    private string _timezone = "Asia/Kolkata";
-    private string _timeGranularity = "OneHour";
-    private string _theme = "Dark";
-    private bool _pushNotifications = true;
-    private bool _loading = true;
+    private bool _autoFill = true;
+    private bool _smartSuggestions = true;
+    private bool _dailySummary;
+    private bool _goalCoaching = true;
+    private bool _pushEnabled = true;
 
-    private List<AiToggle> _aiToggles = new()
-    {
-        new("Auto-Fill Day Logger", true),
-        new("Smart Suggestions", true),
-        new("Daily Summary Generator", false),
-        new("Spending Insights", true),
-        new("Goal Coaching", true),
-    };
-
-    protected override async Task OnInitializedAsync()
-    {
-        _loading = true;
-        try
-        {
-            _categories = await CategorySvc.GetAllAsync();
-            var settings = await SettingsSvc.GetAsync();
-            var profile = await SettingsSvc.GetProfileAsync();
-
-            if (settings is not null)
-            {
-                _timeGranularity = settings.TimeGranularity ?? "OneHour";
-                _theme = settings.ThemeMode ?? "Dark";
-            }
-            if (profile is not null)
-            {
-                _profileName = profile.FullName ?? "User";
-                _profileEmail = profile.Email ?? "user@example.com";
-                _timezone = profile.Timezone ?? "Asia/Kolkata";
-            }
-        }
-        catch { /* offline fallback */ }
-        finally { _loading = false; }
-    }
-
-    private void ToggleAi(AiToggle toggle)
-    {
-        var index = _aiToggles.IndexOf(toggle);
-        if (index >= 0)
-            _aiToggles[index] = toggle with { Value = !toggle.Value };
-    }
-
-    private async Task ArchiveCategory(Guid id)
-    {
-        await CategorySvc.ArchiveAsync(id);
-        _categories = await CategorySvc.GetAllAsync();
-        Snackbar.Add("Category archived.", Severity.Info);
-    }
-
-    private async Task SaveAll()
-    {
-        try
-        {
-            await SettingsSvc.UpdateAsync(new UpdateSettingsRequestDto
-            {
-                ThemeMode = _theme,
-                TimeGranularity = _timeGranularity
-            });
-            await SettingsSvc.UpdateProfileAsync(new UpdateProfileRequestDto
-            {
-                FullName = _profileName,
-                Timezone = _timezone
-            });
-            Snackbar.Add("Settings saved!", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error saving: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private record AiToggle(string Label, bool Value);
+    private void HandleExport() => Snackbar.Add("Export feature coming soon!", Severity.Info);
+    private void HandleImport() => Snackbar.Add("Import feature coming soon!", Severity.Info);
 }
