@@ -1,0 +1,217 @@
+@page "/daily-log"
+@page "/daily-log/{DateParam}"
+@inject DailyLogService DailyLogSvc
+@inject CategoryService CategorySvc
+@inject ISnackbar Snackbar
+
+<PageTitle>Daily Logger — LifeTracker Pro</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-2" Style="font-weight:700;">Daily Logger</MudText>
+
+<!-- Date Navigator -->
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+    <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevDay" />
+    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Style="font-family:'Space Mono',monospace;">
+        @_selectedDate.ToString("ddd, dd MMM yyyy")
+    </MudChip>
+    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextDay"
+                   Disabled="@(_selectedDate >= DateOnly.FromDateTime(DateTime.Now))" />
+    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="GoToday">Today</MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <!-- 24-Hour Time Grid -->
+    <MudPaper Class="pa-4 mb-4" Style="background:#1a1830; border-radius:12px;">
+        <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-weight:600;">Time Slots</MudText>
+        <div style="display:grid; grid-template-columns:repeat(12, 1fr); gap:4px;">
+            @for (int i = 0; i < 24; i++)
+            {
+                var hour = i;
+                var slotValue = hour < _hourSlots.Count ? _hourSlots[hour] : "";
+                var cat = _categories.FirstOrDefault(c => c.Letter == slotValue || c.Code == slotValue);
+                var bgColor = cat?.Color ?? "#2d2a4a";
+                var letter = cat?.Letter ?? "";
+
+                <MudPaper @onclick="@(() => OpenCategoryPicker(hour))"
+                         Style="@($"background:{bgColor}; cursor:pointer; text-align:center; padding:8px 4px; border-radius:8px; min-height:60px; display:flex; flex-direction:column; justify-content:center; transition:transform 0.1s;")"
+                         Elevation="0">
+                    <MudText Typo="Typo.caption" Style="color:rgba(255,255,255,0.6); font-size:10px;">
+                        @hour.ToString("00"):00
+                    </MudText>
+                    <MudText Typo="Typo.body1" Style="font-weight:700; color:white; font-family:'Space Mono',monospace;">
+                        @letter
+                    </MudText>
+                </MudPaper>
+            }
+        </div>
+    </MudPaper>
+
+    <!-- Metadata Fields -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="4">
+            <MudNumericField @bind-Value="_weight" Label="Weight (kg)" Variant="Variant.Outlined"
+                             Format="F1" Min="0m" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudNumericField @bind-Value="_amountSpent" Label="Amount Spent (₹)" Variant="Variant.Outlined"
+                             Format="F2" Min="0m" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudTextField @bind-Value="_highlight" Label="Highlight of the Day" Variant="Variant.Outlined" />
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudText Typo="Typo.body2" Class="mb-1">Mood (1-5)</MudText>
+            <MudRating @bind-SelectedValue="_moodScore" MaxValue="5" FullIcon="@Icons.Material.Filled.Favorite"
+                       EmptyIcon="@Icons.Material.Outlined.FavoriteBorder" Color="Color.Error" />
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudNumericField @bind-Value="_productivityScore" Label="Productivity (1-10)"
+                             Variant="Variant.Outlined" Min="1" Max="10" />
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField @bind-Value="_notes" Label="Notes" Variant="Variant.Outlined" Lines="2" />
+        </MudItem>
+    </MudGrid>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveLog"
+               Disabled="_saving" StartIcon="@Icons.Material.Filled.Save" Size="Size.Large">
+        @if (_saving) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" /> }
+        Save Daily Log
+    </MudButton>
+}
+
+<!-- Category Picker Dialog -->
+<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Select Category for @_pickerHour:00</MudText>
+    </TitleContent>
+    <DialogContent>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            @foreach (var cat in _categories.Where(c => !c.IsArchived))
+            {
+                <MudPaper @onclick="@(() => SelectCategory(cat))"
+                         Style="@($"background:{cat.Color}; cursor:pointer; padding:12px; border-radius:8px; text-align:center;")"
+                         Elevation="0">
+                    <MudText Typo="Typo.h6" Style="font-weight:700; color:white; font-family:'Space Mono',monospace;">
+                        @cat.Letter
+                    </MudText>
+                    <MudText Typo="Typo.caption" Style="color:rgba(255,255,255,0.8);">@cat.Name</MudText>
+                </MudPaper>
+            }
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public string? DateParam { get; set; }
+
+    private DateOnly _selectedDate = DateOnly.FromDateTime(DateTime.Now);
+    private List<string> _hourSlots = Enumerable.Repeat("", 24).ToList();
+    private List<CategoryDto> _categories = new();
+    private decimal? _weight;
+    private decimal? _amountSpent;
+    private string? _highlight;
+    private int _moodScore;
+    private int? _productivityScore;
+    private string? _notes;
+    private bool _loading = true;
+    private bool _saving;
+    private bool _pickerOpen;
+    private int _pickerHour;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (DateParam is not null && DateOnly.TryParse(DateParam, out var parsed))
+            _selectedDate = parsed;
+
+        _categories = await CategorySvc.GetAllAsync();
+        await LoadLog();
+    }
+
+    private async Task LoadLog()
+    {
+        _loading = true;
+        try
+        {
+            var log = await DailyLogSvc.GetAsync(_selectedDate);
+            if (log is not null)
+            {
+                _hourSlots = log.HourSlots.Count == 24 ? log.HourSlots : Enumerable.Repeat("", 24).ToList();
+                _weight = log.Weight;
+                _amountSpent = log.AmountSpent;
+                _highlight = log.Highlight;
+                _moodScore = log.MoodScore ?? 0;
+                _productivityScore = log.ProductivityScore;
+                _notes = log.Notes;
+            }
+            else
+            {
+                ResetFields();
+            }
+        }
+        catch { ResetFields(); }
+        finally { _loading = false; }
+    }
+
+    private void ResetFields()
+    {
+        _hourSlots = Enumerable.Repeat("", 24).ToList();
+        _weight = null;
+        _amountSpent = null;
+        _highlight = null;
+        _moodScore = 0;
+        _productivityScore = null;
+        _notes = null;
+    }
+
+    private async Task PrevDay() { _selectedDate = _selectedDate.AddDays(-1); await LoadLog(); }
+    private async Task NextDay() { _selectedDate = _selectedDate.AddDays(1); await LoadLog(); }
+    private async Task GoToday() { _selectedDate = DateOnly.FromDateTime(DateTime.Now); await LoadLog(); }
+
+    private void OpenCategoryPicker(int hour)
+    {
+        _pickerHour = hour;
+        _pickerOpen = true;
+    }
+
+    private void SelectCategory(CategoryDto cat)
+    {
+        if (_pickerHour >= 0 && _pickerHour < _hourSlots.Count)
+            _hourSlots[_pickerHour] = cat.Letter;
+        _pickerOpen = false;
+    }
+
+    private async Task SaveLog()
+    {
+        _saving = true;
+        try
+        {
+            var result = await DailyLogSvc.UpsertAsync(_selectedDate, new UpsertDailyLogRequestDto
+            {
+                Date = _selectedDate,
+                HourSlots = _hourSlots,
+                Weight = _weight,
+                AmountSpent = _amountSpent,
+                Highlight = _highlight,
+                MoodScore = _moodScore > 0 ? _moodScore : null,
+                ProductivityScore = _productivityScore,
+                Notes = _notes
+            });
+
+            Snackbar.Add("Daily log saved!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save: {ex.Message}", Severity.Error);
+        }
+        finally { _saving = false; }
+    }
+}

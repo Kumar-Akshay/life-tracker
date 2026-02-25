@@ -1,0 +1,156 @@
+@page "/"
+@page "/dashboard"
+@inject DashboardService DashboardSvc
+@inject CategoryService CategorySvc
+
+<PageTitle>Dashboard — LifeTracker Pro</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4" Style="font-weight:700;">Dashboard</MudText>
+
+<!-- Period Selector -->
+<MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" Class="mb-4">
+    <MudButton OnClick="@(() => LoadData("week"))"
+               Variant="@(_period == "week" ? Variant.Filled : Variant.Outlined)">Week</MudButton>
+    <MudButton OnClick="@(() => LoadData("month"))"
+               Variant="@(_period == "month" ? Variant.Filled : Variant.Outlined)">Month</MudButton>
+    <MudButton OnClick="@(() => LoadData("year"))"
+               Variant="@(_period == "year" ? Variant.Filled : Variant.Outlined)">Year</MudButton>
+</MudButtonGroup>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else if (_dashboard is not null)
+{
+    <!-- KPI Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4" Style="background:#1a1830; text-align:center; border-radius:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Style="font-weight:700; font-family:'Space Mono',monospace;">
+                    @_dashboard.TotalLoggedHours
+                </MudText>
+                <MudText Typo="Typo.body2" Style="color:#94A3B8;">Hours Logged</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4" Style="background:#1a1830; text-align:center; border-radius:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.CurrencyRupee" Color="Color.Warning" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Style="font-weight:700; font-family:'Space Mono',monospace;">
+                    ₹@_dashboard.TotalSpent.ToString("N0")
+                </MudText>
+                <MudText Typo="Typo.body2" Style="color:#94A3B8;">Total Spent</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4" Style="background:#1a1830; text-align:center; border-radius:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.LocalFireDepartment" Color="Color.Error" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Style="font-weight:700; font-family:'Space Mono',monospace;">
+                    @_dashboard.CurrentStreak
+                </MudText>
+                <MudText Typo="Typo.body2" Style="color:#94A3B8;">Day Streak</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" sm="3">
+            <MudPaper Class="pa-4" Style="background:#1a1830; text-align:center; border-radius:12px;">
+                <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Success" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Style="font-weight:700; font-family:'Space Mono',monospace;">
+                    @_dashboard.DaysLogged
+                </MudText>
+                <MudText Typo="Typo.body2" Style="color:#94A3B8;">Days Logged</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Charts Row -->
+    <MudGrid>
+        <!-- Hours Per Category Pie -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Style="background:#1a1830; border-radius:12px;">
+                <MudText Typo="Typo.h6" Class="mb-3">Hours by Category</MudText>
+                @if (_dashboard.HoursPerCategory.Any())
+                {
+                    @foreach (var cat in _dashboard.HoursPerCategory.Take(8))
+                    {
+                        <div style="display:flex; align-items:center; margin-bottom:8px;">
+                            <div style="width:12px;height:12px;border-radius:50%;background:@cat.Color;margin-right:10px;"></div>
+                            <MudText Typo="Typo.body2" Style="flex:1;">@cat.CategoryName</MudText>
+                            <MudText Typo="Typo.body2" Style="font-family:'Space Mono',monospace; color:#94A3B8;">
+                                @cat.Hours h (@cat.Percentage%)
+                            </MudText>
+                        </div>
+                        <MudProgressLinear Value="@cat.Percentage" Color="Color.Primary" Rounded="true" Size="Size.Small"
+                                          Style="@($"margin-bottom:4px;")" />
+                    }
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Style="color:#94A3B8;">No data for this period.</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <!-- Spend Summary -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Style="background:#1a1830; border-radius:12px;">
+                <MudText Typo="Typo.h6" Class="mb-3">Spend Summary</MudText>
+                <MudSimpleTable Dense="true" Hover="true" Style="background:transparent;">
+                    <tbody>
+                        <tr>
+                            <td style="color:#94A3B8;">Total Spent</td>
+                            <td style="text-align:right; font-family:'Space Mono',monospace;">
+                                ₹@_dashboard.SpendSummary.TotalSpent.ToString("N2")
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="color:#94A3B8;">Daily Average</td>
+                            <td style="text-align:right; font-family:'Space Mono',monospace;">
+                                ₹@_dashboard.SpendSummary.AverageDaily.ToString("N2")
+                            </td>
+                        </tr>
+                        @if (_dashboard.SpendSummary.BudgetRemaining.HasValue)
+                        {
+                            <tr>
+                                <td style="color:#94A3B8;">Budget Remaining</td>
+                                <td style="text-align:right; font-family:'Space Mono',monospace; color:@(_dashboard.SpendSummary.BudgetRemaining >= 0 ? "#10B981" : "#EF4444");">
+                                    ₹@_dashboard.SpendSummary.BudgetRemaining.Value.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+else
+{
+    <MudText Typo="Typo.body1" Style="color:#94A3B8;">Log your first day to see dashboard data!</MudText>
+}
+
+@code {
+    private DashboardDto? _dashboard;
+    private string _period = "week";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData("week");
+    }
+
+    private async Task LoadData(string period)
+    {
+        _period = period;
+        _loading = true;
+        try
+        {
+            _dashboard = await DashboardSvc.GetAsync(period);
+        }
+        catch { /* handle offline */ }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

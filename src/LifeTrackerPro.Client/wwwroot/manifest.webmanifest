@@ -1,0 +1,26 @@
+{
+  "name": "LifeTracker Pro",
+  "short_name": "LifeTracker",
+  "description": "Track every hour of your life. Visualize patterns. Build better habits.",
+  "id": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0c0a1a",
+  "theme_color": "#6366F1",
+  "prefer_related_applications": false,
+  "categories": ["productivity", "lifestyle", "health"],
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    }
+  ]
+}

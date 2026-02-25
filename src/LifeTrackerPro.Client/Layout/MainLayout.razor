@@ -1,0 +1,52 @@
+﻿@inherits LayoutComponentBase
+@inject AuthStateProvider AuthState
+@inject NavigationManager Nav
+
+<MudLayout>
+    @if (AuthState.IsAuthenticated)
+    {
+        <MudAppBar Elevation="0" Dense="true" Style="background: #0c0a1a; border-bottom: 1px solid #1e1b3a;">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                           OnClick="@ToggleDrawer" />
+            <MudText Typo="Typo.h6" Class="ml-2" Style="font-weight:700; color:#6366F1;">LifeTracker Pro</MudText>
+            <MudSpacer />
+            <MudText Typo="Typo.body2" Class="mr-3" Style="color:#94A3B8;">@AuthState.CurrentUser?.FullName</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="HandleLogout" />
+        </MudAppBar>
+
+        <MudDrawer @bind-Open="_drawerOpen" Elevation="1" Variant="DrawerVariant.Mini"
+                   Style="background: #0f0d24;">
+            <MudNavMenu>
+                <MudNavLink Href="/dashboard" Match="NavLinkMatch.All"
+                            Icon="@Icons.Material.Filled.Dashboard" IconColor="Color.Primary">
+                    Dashboard
+                </MudNavLink>
+                <MudNavLink Href="/daily-log" Match="NavLinkMatch.Prefix"
+                            Icon="@Icons.Material.Filled.EditCalendar" IconColor="Color.Secondary">
+                    Daily Logger
+                </MudNavLink>
+                <MudNavLink Href="/settings" Match="NavLinkMatch.Prefix"
+                            Icon="@Icons.Material.Filled.Settings" IconColor="Color.Tertiary">
+                    Settings
+                </MudNavLink>
+            </MudNavMenu>
+        </MudDrawer>
+    }
+
+    <MudMainContent Class="pa-4" Style="min-height: 100vh; background: #0c0a1a;">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private async Task HandleLogout()
+    {
+        AuthState.ClearToken();
+        Nav.NavigateTo("/login");
+        await Task.CompletedTask;
+    }
+}
