@@ -1,0 +1,150 @@
+@page "/spending"
+@inject DashboardService DashboardSvc
+
+<PageTitle>Spending — LifeTracker Pro</PageTitle>
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+        <h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Spending Tracker</h2>
+        <p class="subtitle-text" style="margin:0;">Monitor expenses, stay within budget</p>
+    </div>
+</div>
+
+<!-- Budget Progress Bar -->
+<div class="glass-card" style="margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="color:#94a3b8; font-size:12px; font-weight:600; font-family:'DM Sans',sans-serif;">Monthly Budget</span>
+        <span style="color:#f1f5f9; font-size:13px; font-family:'Space Mono',monospace; font-weight:700;">₹@_spent.ToString("N0") / ₹@_budget.ToString("N0")</span>
+    </div>
+    <div class="lt-progress-bar" style="height:10px; border-radius:5px;">
+        <div class="lt-progress-fill" style="width:@BudgetPct()%; background:@BudgetColor(); border-radius:5px;"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+        <span style="color:#475569; font-size:10px; font-family:'Space Mono',monospace;">@BudgetPct().ToString("F0")% used</span>
+        <span style="color:@(BudgetRemaining() >= 0 ? "#22c55e" : "#ef4444"); font-size:10px; font-family:'Space Mono',monospace;">₹@BudgetRemaining().ToString("N0") remaining</span>
+    </div>
+</div>
+
+<!-- Metrics -->
+<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:20px;">
+    <div class="metric-card">
+        <span class="metric-label">Daily Average</span>
+        <span class="metric-value" style="font-family:'Space Mono',monospace;">₹@_dailyAvg.ToString("N0")</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-label">Highest Day</span>
+        <span class="metric-value" style="font-family:'Space Mono',monospace; color:#ef4444;">₹@_highestDay.ToString("N0")</span>
+    </div>
+    <div class="metric-card">
+        <span class="metric-label">Days Under Budget</span>
+        <span class="metric-value" style="font-family:'Space Mono',monospace; color:#22c55e;">@_daysUnderBudget</span>
+    </div>
+</div>
+
+<!-- Monthly Spending Chart (Bar representation) -->
+<div class="chart-card" style="margin-bottom:20px;">
+    <div class="chart-title">Monthly Spending</div>
+    <div style="display:flex; align-items:flex-end; gap:8px; height:160px; padding-top:10px;">
+        @foreach (var m in _monthlyData)
+        {
+            var maxAmount = _monthlyData.Max(x => x.Amount);
+            var heightPct = maxAmount > 0 ? (m.Amount / maxAmount) * 100 : 0;
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <span style="color:#94a3b8; font-size:10px; font-family:'Space Mono',monospace;">₹@m.Amount.ToString("N0")</span>
+                <div style="width:100%; height:@heightPct%; min-height:4px; border-radius:6px 6px 0 0; background:linear-gradient(180deg, #6366f1, #4f46e5); transition:height 0.3s;"></div>
+                <span style="color:#64748b; font-size:10px; font-family:'DM Sans',sans-serif;">@m.Month</span>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="chart-card" style="margin-bottom:20px;">
+    <div class="chart-title">Recent Transactions</div>
+    @if (!_transactions.Any())
+    {
+        <p style="color:#64748b; font-size:13px;">No transactions recorded yet.</p>
+    }
+    else
+    {
+        @foreach (var tx in _transactions)
+        {
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(148,163,184,0.06);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:32px; height:32px; border-radius:8px; background:rgba(99,102,241,0.12); display:flex; align-items:center; justify-content:center;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                    <div>
+                        <div style="color:#e2e8f0; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif;">@tx.Description</div>
+                        <div style="color:#64748b; font-size:11px; font-family:'DM Sans',sans-serif;">@tx.Date</div>
+                    </div>
+                </div>
+                <span style="color:@(tx.Amount >= 0 ? "#ef4444" : "#22c55e"); font-size:14px; font-weight:700; font-family:'Space Mono',monospace;">
+                    -₹@Math.Abs(tx.Amount).ToString("N0")
+                </span>
+            </div>
+        }
+    }
+</div>
+
+<!-- Investment Card -->
+<div style="background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(34,197,94,0.06)); border:1px solid rgba(99,102,241,0.12); border-radius:14px; padding:16px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:#22c55e;"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg>
+        <span style="color:#a5b4fc; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif;">Investment Summary</span>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+        <div>
+            <div style="color:#64748b; font-size:11px; font-family:'DM Sans',sans-serif;">Monthly SIP</div>
+            <div style="color:#f1f5f9; font-size:16px; font-weight:700; font-family:'Space Mono',monospace;">₹5,000</div>
+        </div>
+        <div>
+            <div style="color:#64748b; font-size:11px; font-family:'DM Sans',sans-serif;">Total Invested</div>
+            <div style="color:#f1f5f9; font-size:16px; font-weight:700; font-family:'Space Mono',monospace;">₹15,000</div>
+        </div>
+        <div>
+            <div style="color:#64748b; font-size:11px; font-family:'DM Sans',sans-serif;">Returns</div>
+            <div style="color:#22c55e; font-size:16px; font-weight:700; font-family:'Space Mono',monospace;">+2.4%</div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private decimal _spent = 0;
+    private decimal _budget = 500;
+    private decimal _dailyAvg = 0;
+    private decimal _highestDay = 0;
+    private int _daysUnderBudget = 0;
+    private List<MonthlySpend> _monthlyData = new();
+    private List<TransactionItem> _transactions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var dashboard = await DashboardSvc.GetAsync("month");
+            if (dashboard is not null)
+            {
+                _spent = dashboard.TotalSpent;
+                _dailyAvg = dashboard.SpendSummary.AverageDaily;
+                if (dashboard.SpendSummary.BudgetRemaining.HasValue)
+                    _budget = _spent + dashboard.SpendSummary.BudgetRemaining.Value;
+            }
+        }
+        catch { /* offline fallback */ }
+
+        // Static monthly data (will be replaced by real API data)
+        _monthlyData = new()
+        {
+            new("Jan", 93.5m), new("Feb", 280m), new("Mar", 150m),
+            new("Apr", 0m), new("May", 0m), new("Jun", 0m)
+        };
+    }
+
+    private double BudgetPct() => _budget > 0 ? (double)(_spent / _budget) * 100 : 0;
+    private decimal BudgetRemaining() => _budget - _spent;
+    private string BudgetColor() => BudgetPct() > 80 ? "#ef4444" : BudgetPct() > 60 ? "#eab308" : "#22c55e";
+
+    private record MonthlySpend(string Month, decimal Amount);
+    private record TransactionItem(string Description, string Date, decimal Amount);
+}

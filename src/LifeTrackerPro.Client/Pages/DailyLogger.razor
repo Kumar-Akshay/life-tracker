@@ -6,109 +6,187 @@
 
 <PageTitle>Daily Logger — LifeTracker Pro</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-2" Style="font-weight:700;">Daily Logger</MudText>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+        <h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Daily Logger</h2>
+        <p class="subtitle-text" style="margin:0;">Log your activities for each hour of the day</p>
+    </div>
+    <div style="display:flex; gap:8px;">
+        <button @onclick="GoToday" class="lt-btn lt-btn-ghost" style="font-size:12px; padding:8px 14px;">Today</button>
+        <button @onclick="SaveLog" disabled="@_saving" class="lt-btn lt-btn-primary" style="font-size:12px; padding:8px 14px;">
+            @if (_saving) { <span class="spin">⟳</span> }
+            Save Log
+        </button>
+    </div>
+</div>
 
-<!-- Date Navigator -->
-<div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
-    <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" OnClick="PrevDay" />
-    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Style="font-family:'Space Mono',monospace;">
-        @_selectedDate.ToString("ddd, dd MMM yyyy")
-    </MudChip>
-    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" OnClick="NextDay"
-                   Disabled="@(_selectedDate >= DateOnly.FromDateTime(DateTime.Now))" />
-    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="GoToday">Today</MudButton>
+<!-- Day Selector -->
+<div class="day-selector">
+    <button @onclick="PrevWeek" style="padding:8px 10px; border-radius:8px; background:rgba(15,23,42,0.5); border:1px solid rgba(148,163,184,0.1); color:#94a3b8; cursor:pointer; font-size:12px;">◀</button>
+    @for (int d = -6; d <= 0; d++)
+    {
+        var dayOffset = d;
+        var date = DateOnly.FromDateTime(DateTime.Now).AddDays(dayOffset);
+        var isSelected = date == _selectedDate;
+        <button @onclick="@(() => SelectDate(date))"
+                class="day-chip @(isSelected ? "active" : "")">
+            <div style="font-size:10px; color:@(isSelected ? "#a5b4fc" : "#64748b");">@date.ToString("ddd")</div>
+            <div style="font-weight:600;">@date.Day</div>
+        </button>
+    }
+    <button @onclick="NextWeek" style="padding:8px 10px; border-radius:8px; background:rgba(15,23,42,0.5); border:1px solid rgba(148,163,184,0.1); color:#94a3b8; cursor:pointer; font-size:12px;"
+            disabled="@(_selectedDate >= DateOnly.FromDateTime(DateTime.Now))">▶</button>
 </div>
 
 @if (_loading)
 {
-    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    <div style="text-align:center; padding:40px;">
+        <span class="spin" style="color:#6366f1; font-size:24px;">⟳</span>
+        <p style="color:#64748b; font-size:13px; margin-top:8px;">Loading...</p>
+    </div>
 }
 else
 {
-    <!-- 24-Hour Time Grid -->
-    <MudPaper Class="pa-4 mb-4" Style="background:#1a1830; border-radius:12px;">
-        <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-weight:600;">Time Slots</MudText>
-        <div style="display:grid; grid-template-columns:repeat(12, 1fr); gap:4px;">
-            @for (int i = 0; i < 24; i++)
+    <!-- 24-Hour Time Grid (2 rows of 12) -->
+    <div class="glass-card" style="margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <span style="color:#94a3b8; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif;">24-Hour Timeline</span>
+            <span style="color:#475569; font-size:11px; font-family:'Space Mono',monospace;">@_selectedDate.ToString("ddd, dd MMM yyyy")</span>
+        </div>
+        <div class="time-grid" style="margin-bottom:6px;">
+            @for (int i = 0; i < 12; i++)
             {
                 var hour = i;
                 var slotValue = hour < _hourSlots.Count ? _hourSlots[hour] : "";
                 var cat = _categories.FirstOrDefault(c => c.Letter == slotValue || c.Code == slotValue);
-                var bgColor = cat?.Color ?? "#2d2a4a";
+                var bgColor = cat != null ? cat.Color : "";
                 var letter = cat?.Letter ?? "";
+                var isEmpty = string.IsNullOrEmpty(slotValue);
 
-                <MudPaper @onclick="@(() => OpenCategoryPicker(hour))"
-                         Style="@($"background:{bgColor}; cursor:pointer; text-align:center; padding:8px 4px; border-radius:8px; min-height:60px; display:flex; flex-direction:column; justify-content:center; transition:transform 0.1s;")"
-                         Elevation="0">
-                    <MudText Typo="Typo.caption" Style="color:rgba(255,255,255,0.6); font-size:10px;">
-                        @hour.ToString("00"):00
-                    </MudText>
-                    <MudText Typo="Typo.body1" Style="font-weight:700; color:white; font-family:'Space Mono',monospace;">
-                        @letter
-                    </MudText>
-                </MudPaper>
+                <div @onclick="@(() => OpenCategoryPicker(hour))"
+                     class="time-slot @(isEmpty ? "time-slot-empty" : "")"
+                     style="@(isEmpty ? "" : $"background:{bgColor};")">
+                    <span class="time-label">@hour.ToString("00"):00</span>
+                    <span class="time-letter">@letter</span>
+                </div>
             }
         </div>
-    </MudPaper>
+        <div class="time-grid">
+            @for (int i = 12; i < 24; i++)
+            {
+                var hour = i;
+                var slotValue = hour < _hourSlots.Count ? _hourSlots[hour] : "";
+                var cat = _categories.FirstOrDefault(c => c.Letter == slotValue || c.Code == slotValue);
+                var bgColor = cat != null ? cat.Color : "";
+                var letter = cat?.Letter ?? "";
+                var isEmpty = string.IsNullOrEmpty(slotValue);
 
-    <!-- Metadata Fields -->
-    <MudGrid Class="mb-4">
-        <MudItem xs="12" sm="4">
-            <MudNumericField @bind-Value="_weight" Label="Weight (kg)" Variant="Variant.Outlined"
-                             Format="F1" Min="0m" />
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudNumericField @bind-Value="_amountSpent" Label="Amount Spent (₹)" Variant="Variant.Outlined"
-                             Format="F2" Min="0m" />
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudTextField @bind-Value="_highlight" Label="Highlight of the Day" Variant="Variant.Outlined" />
-        </MudItem>
-    </MudGrid>
+                <div @onclick="@(() => OpenCategoryPicker(hour))"
+                     class="time-slot @(isEmpty ? "time-slot-empty" : "")"
+                     style="@(isEmpty ? "" : $"background:{bgColor};")">
+                    <span class="time-label">@hour.ToString("00"):00</span>
+                    <span class="time-letter">@letter</span>
+                </div>
+            }
+        </div>
+    </div>
 
-    <MudGrid Class="mb-4">
-        <MudItem xs="6" sm="3">
-            <MudText Typo="Typo.body2" Class="mb-1">Mood (1-5)</MudText>
-            <MudRating @bind-SelectedValue="_moodScore" MaxValue="5" FullIcon="@Icons.Material.Filled.Favorite"
-                       EmptyIcon="@Icons.Material.Outlined.FavoriteBorder" Color="Color.Error" />
-        </MudItem>
-        <MudItem xs="6" sm="3">
-            <MudNumericField @bind-Value="_productivityScore" Label="Productivity (1-10)"
-                             Variant="Variant.Outlined" Min="1" Max="10" />
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudTextField @bind-Value="_notes" Label="Notes" Variant="Variant.Outlined" Lines="2" />
-        </MudItem>
-    </MudGrid>
+    <!-- Category Legend -->
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px;">
+        @foreach (var cat in _categories.Where(c => !c.IsArchived).Take(12))
+        {
+            <div style="display:flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; background:rgba(15,23,42,0.4); border:1px solid rgba(148,163,184,0.06);">
+                <div style="width:8px; height:8px; border-radius:50%; background:@cat.Color;"></div>
+                <span style="font-size:10px; color:#94a3b8; font-family:'DM Sans',sans-serif;">@cat.Letter · @cat.Name</span>
+            </div>
+        }
+    </div>
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveLog"
-               Disabled="_saving" StartIcon="@Icons.Material.Filled.Save" Size="Size.Large">
-        @if (_saving) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" /> }
-        Save Daily Log
-    </MudButton>
+    <!-- Metadata Row -->
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:16px;">
+        <div class="metric-card">
+            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Weight (kg)</label>
+            <input @bind="_weight" type="number" step="0.1" placeholder="0.0"
+                   style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#f1f5f9; font-size:16px; font-family:'Space Mono',monospace; font-weight:700; outline:none;"
+                   onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'" />
+        </div>
+        <div class="metric-card">
+            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Spent (₹)</label>
+            <input @bind="_amountSpent" type="number" step="0.01" placeholder="0.00"
+                   style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#f1f5f9; font-size:16px; font-family:'Space Mono',monospace; font-weight:700; outline:none;"
+                   onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'" />
+        </div>
+        <div class="metric-card">
+            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Productive Hours</label>
+            <input @bind="_productivityScore" type="number" min="0" max="24" placeholder="0"
+                   style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#f1f5f9; font-size:16px; font-family:'Space Mono',monospace; font-weight:700; outline:none;"
+                   onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'" />
+        </div>
+    </div>
+
+    <!-- Highlight Card -->
+    <div class="highlight-card" style="margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#818cf8;"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg>
+            <span style="color:#a5b4fc; font-size:12px; font-weight:600; font-family:'DM Sans',sans-serif;">Highlight of the Day</span>
+        </div>
+        <input @bind="_highlight" type="text" placeholder="What was the best part of your day?"
+               style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(99,102,241,0.15); background:rgba(15,23,42,0.3); color:#e2e8f0; font-size:13px; font-family:'DM Sans',sans-serif; outline:none;"
+               onfocus="this.style.borderColor='rgba(99,102,241,0.4)'" onblur="this.style.borderColor='rgba(99,102,241,0.15)'" />
+    </div>
+
+    <!-- Mood & Notes -->
+    <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px; margin-bottom:20px;">
+        <div class="glass-card">
+            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:8px; display:block;">Mood</label>
+            <div style="display:flex; gap:4px;">
+                @for (int m = 1; m <= 5; m++)
+                {
+                    var mood = m;
+                    <button @onclick="@(() => _moodScore = mood)"
+                            style="width:32px; height:32px; border-radius:8px; border:none; cursor:pointer; font-size:16px; background:@(mood <= _moodScore ? "rgba(239,68,68,0.15)" : "rgba(15,23,42,0.5)"); transition:all 0.15s;">
+                        @(mood <= _moodScore ? "❤️" : "🤍")
+                    </button>
+                }
+            </div>
+        </div>
+        <div class="glass-card">
+            <label style="color:#94a3b8; font-size:11px; font-weight:600; font-family:'DM Sans',sans-serif; margin-bottom:6px; display:block;">Notes</label>
+            <textarea @bind="_notes" placeholder="Any additional notes..."
+                      style="width:100%; height:48px; padding:8px 10px; border-radius:8px; border:1px solid rgba(148,163,184,0.15); background:rgba(15,23,42,0.5); color:#e2e8f0; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; resize:none;"
+                      onfocus="this.style.borderColor='rgba(99,102,241,0.5)'" onblur="this.style.borderColor='rgba(148,163,184,0.15)'"></textarea>
+        </div>
+    </div>
 }
 
 <!-- Category Picker Dialog -->
-<MudDialog @bind-Visible="_pickerOpen" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
-    <TitleContent>
-        <MudText Typo="Typo.h6">Select Category for @_pickerHour:00</MudText>
-    </TitleContent>
-    <DialogContent>
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
-            @foreach (var cat in _categories.Where(c => !c.IsArchived))
-            {
-                <MudPaper @onclick="@(() => SelectCategory(cat))"
-                         Style="@($"background:{cat.Color}; cursor:pointer; padding:12px; border-radius:8px; text-align:center;")"
-                         Elevation="0">
-                    <MudText Typo="Typo.h6" Style="font-weight:700; color:white; font-family:'Space Mono',monospace;">
-                        @cat.Letter
-                    </MudText>
-                    <MudText Typo="Typo.caption" Style="color:rgba(255,255,255,0.8);">@cat.Name</MudText>
-                </MudPaper>
-            }
+@if (_pickerOpen)
+{
+    <div style="position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; z-index:9999;"
+         @onclick="ClosePicker">
+        <div @onclick:stopPropagation style="width:360px; background:rgba(15,23,42,0.95); border:1px solid rgba(148,163,184,0.15); border-radius:16px; padding:20px; backdrop-filter:blur(20px);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <span style="color:#f1f5f9; font-size:15px; font-weight:600; font-family:'DM Sans',sans-serif;">
+                    Select Category for @_pickerHour:00
+                </span>
+                <button @onclick="ClosePicker" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:18px;">✕</button>
+            </div>
+            <div class="category-picker-grid">
+                @foreach (var cat in _categories.Where(c => !c.IsArchived))
+                {
+                    <button @onclick="@(() => SelectCategory(cat))" class="category-pick-btn" style="background:@cat.Color;">
+                        <div class="cat-letter">@cat.Letter</div>
+                        <div class="cat-name">@cat.Name</div>
+                    </button>
+                }
+                <button @onclick="ClearSlot" class="category-pick-btn" style="background:rgba(148,163,184,0.1); border:1px dashed rgba(148,163,184,0.2);">
+                    <div class="cat-letter" style="color:#94a3b8;">✕</div>
+                    <div class="cat-name" style="color:#64748b;">Clear</div>
+                </button>
+            </div>
         </div>
-    </DialogContent>
-</MudDialog>
+    </div>
+}
 
 @code {
     [Parameter] public string? DateParam { get; set; }
@@ -164,28 +242,29 @@ else
     private void ResetFields()
     {
         _hourSlots = Enumerable.Repeat("", 24).ToList();
-        _weight = null;
-        _amountSpent = null;
-        _highlight = null;
-        _moodScore = 0;
-        _productivityScore = null;
-        _notes = null;
+        _weight = null; _amountSpent = null; _highlight = null;
+        _moodScore = 0; _productivityScore = null; _notes = null;
     }
 
-    private async Task PrevDay() { _selectedDate = _selectedDate.AddDays(-1); await LoadLog(); }
-    private async Task NextDay() { _selectedDate = _selectedDate.AddDays(1); await LoadLog(); }
+    private async Task SelectDate(DateOnly date) { _selectedDate = date; await LoadLog(); }
+    private async Task PrevWeek() { _selectedDate = _selectedDate.AddDays(-7); await LoadLog(); }
+    private async Task NextWeek() { _selectedDate = _selectedDate.AddDays(1); await LoadLog(); }
     private async Task GoToday() { _selectedDate = DateOnly.FromDateTime(DateTime.Now); await LoadLog(); }
 
-    private void OpenCategoryPicker(int hour)
-    {
-        _pickerHour = hour;
-        _pickerOpen = true;
-    }
+    private void OpenCategoryPicker(int hour) { _pickerHour = hour; _pickerOpen = true; }
+    private void ClosePicker() { _pickerOpen = false; }
 
     private void SelectCategory(CategoryDto cat)
     {
         if (_pickerHour >= 0 && _pickerHour < _hourSlots.Count)
             _hourSlots[_pickerHour] = cat.Letter;
+        _pickerOpen = false;
+    }
+
+    private void ClearSlot()
+    {
+        if (_pickerHour >= 0 && _pickerHour < _hourSlots.Count)
+            _hourSlots[_pickerHour] = "";
         _pickerOpen = false;
     }
 

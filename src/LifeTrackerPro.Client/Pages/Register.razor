@@ -1,83 +1,12 @@
 @page "/register"
-@inject AuthService Auth
 @inject NavigationManager Nav
-@inject ISnackbar Snackbar
 
 <PageTitle>Register — LifeTracker Pro</PageTitle>
 
-<div style="display:flex; justify-content:center; align-items:center; min-height:90vh;">
-    <MudCard Style="width:420px; background:#1a1830; border:1px solid #2d2a4a;">
-        <MudCardContent>
-            <MudText Typo="Typo.h4" Align="Align.Center" Style="font-weight:700; color:#6366F1;" Class="mb-4">
-                Create Account
-            </MudText>
-
-            <MudTextField @bind-Value="_fullName" Label="Full Name" Variant="Variant.Outlined"
-                          Class="mb-3" FullWidth="true" />
-            <MudTextField @bind-Value="_email" Label="Email" Variant="Variant.Outlined"
-                          InputType="InputType.Email" Class="mb-3" FullWidth="true" />
-            <MudTextField @bind-Value="_password" Label="Password" Variant="Variant.Outlined"
-                          InputType="InputType.Password" Class="mb-3" FullWidth="true" />
-            <MudTextField @bind-Value="_confirmPassword" Label="Confirm Password" Variant="Variant.Outlined"
-                          InputType="InputType.Password" Class="mb-4" FullWidth="true" />
-
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-                       OnClick="HandleRegister" Disabled="_loading" Class="mb-3">
-                @if (_loading) { <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" /> }
-                Sign Up
-            </MudButton>
-
-            <MudText Typo="Typo.body2" Align="Align.Center" Style="color:#94A3B8;">
-                Already have an account?
-                <MudLink Href="/login" Underline="Underline.Always" Style="color:#6366F1;">Sign in</MudLink>
-            </MudText>
-        </MudCardContent>
-    </MudCard>
-</div>
-
 @code {
-    private string _fullName = string.Empty;
-    private string _email = string.Empty;
-    private string _password = string.Empty;
-    private string _confirmPassword = string.Empty;
-    private bool _loading;
-
-    private async Task HandleRegister()
+    protected override void OnInitialized()
     {
-        if (_password != _confirmPassword)
-        {
-            Snackbar.Add("Passwords do not match.", Severity.Warning);
-            return;
-        }
-
-        _loading = true;
-        try
-        {
-            var result = await Auth.RegisterAsync(new RegisterRequestDto
-            {
-                Email = _email,
-                Password = _password,
-                FullName = _fullName
-            });
-
-            if (result?.Success == true)
-            {
-                Snackbar.Add("Account created!", Severity.Success);
-                Nav.NavigateTo("/dashboard");
-            }
-            else
-            {
-                foreach (var err in result?.Errors ?? new())
-                    Snackbar.Add(err, Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _loading = false;
-        }
+        // Registration is now handled on the Login page
+        Nav.NavigateTo("/login");
     }
 }

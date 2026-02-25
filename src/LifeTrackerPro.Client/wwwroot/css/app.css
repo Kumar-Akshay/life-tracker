@@ -1,7 +1,9 @@
-/* LifeTracker Pro — Global Styles */
+/* LifeTracker Pro — Global Styles (Prototype-Matched) */
 
 *, *::before, *::after {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html, body {
@@ -18,13 +20,11 @@ html, body {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #475569; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.3); }
 
 /* App loading */
-#blazor-error-ui {
-    display: none;
-}
+#blazor-error-ui { display: none; }
 
 .blazor-error-boundary {
     background: #dc2626;
@@ -33,102 +33,576 @@ html, body {
     border-radius: 8px;
     margin: 1rem;
 }
+.blazor-error-boundary::after { content: "An error has occurred."; }
 
-.blazor-error-boundary::after {
-    content: "An error has occurred.";
+/* ─── Typography System ─── */
+.heading-display {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #f1f5f9;
 }
+.text-body { font-family: 'DM Sans', sans-serif; }
+.text-data { font-family: 'Space Mono', monospace; }
 
-/* MudBlazor overrides for glass cards */
-.mud-card, .mud-paper {
+/* ─── Glass Card System ─── */
+.glass-card {
+    background: rgba(15,23,42,0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.08);
+    padding: 16px;
     backdrop-filter: blur(12px);
 }
-
-.mud-input-outlined .mud-input-outlined-border {
-    border-color: #334155 !important;
+.glass-card-strong {
+    background: rgba(15,23,42,0.6);
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.08);
+    padding: 20px;
+    backdrop-filter: blur(12px);
+}
+.glass-card-login {
+    background: rgba(15,23,42,0.4);
+    border: 1px solid rgba(148,163,184,0.1);
+    border-radius: 20px;
+    padding: 40px;
+    backdrop-filter: blur(20px);
 }
 
-.mud-input-outlined:hover .mud-input-outlined-border {
-    border-color: #6366F1 !important;
+/* ─── Metric Cards ─── */
+.metric-card {
+    background: rgba(15,23,42,0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.08);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.metric-card .metric-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #f1f5f9;
+    font-family: 'DM Sans', sans-serif;
+}
+.metric-card .metric-label {
+    font-size: 11px;
+    color: #64748b;
+    font-family: 'DM Sans', sans-serif;
 }
 
-/* Time-grid classes used by DailyLogger */
+/* ─── Chart Cards ─── */
+.chart-card {
+    background: rgba(15,23,42,0.5);
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.08);
+    padding: 20px;
+}
+.chart-title {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* ─── Subtitle / Muted Text ─── */
+.subtitle-text {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0 0 20px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* ─── Section Header ─── */
+.section-header {
+    color: #a5b4fc;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 10px;
+}
+
+/* ─── Nav Sidebar ─── */
+.lt-sidebar {
+    width: 220px;
+    background: rgba(15,23,42,0.6);
+    border-right: 1px solid rgba(148,163,184,0.06);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow-y: auto;
+}
+.lt-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    margin-bottom: 28px;
+}
+.lt-sidebar-brand .brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.lt-sidebar-brand .brand-icon span {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+}
+.lt-sidebar-brand .brand-name {
+    color: #f1f5f9;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Playfair Display', Georgia, serif;
+}
+.lt-sidebar-brand .brand-pro {
+    display: block;
+    color: #818cf8;
+    font-size: 9px;
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em;
+}
+
+.lt-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: 2px;
+    width: 100%;
+    text-align: left;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+.lt-nav-btn:hover {
+    background: rgba(99,102,241,0.08);
+    color: #94a3b8;
+}
+.lt-nav-btn.active {
+    background: rgba(99,102,241,0.12);
+    color: #a5b4fc;
+    font-weight: 600;
+}
+.lt-nav-btn .nav-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Sidebar user card */
+.lt-sidebar-user {
+    padding: 12px;
+    background: rgba(99,102,241,0.06);
+    border-radius: 12px;
+    border: 1px solid rgba(99,102,241,0.1);
+    margin-top: auto;
+}
+
+/* ─── Main Content ─── */
+.lt-main {
+    margin-left: 220px;
+    padding: 28px;
+    min-height: 100vh;
+    overflow-y: auto;
+    background: #0c0a1a;
+}
+
+/* ─── Time Grid (DailyLogger) ─── */
 .time-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: 3px;
 }
-
 .time-slot {
-    height: 44px;
     border-radius: 6px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: transform 0.1s, box-shadow 0.15s;
     font-family: 'Space Mono', monospace;
     font-weight: 700;
-    font-size: 11px;
+    font-size: 12px;
     user-select: none;
     -webkit-user-select: none;
+    padding: 4px 2px;
+    min-height: 52px;
 }
-
 .time-slot:hover {
     transform: scale(1.08);
     box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
     z-index: 1;
 }
-
 .time-slot-empty {
-    background: #1e1b3a;
-    border: 1px dashed #334155;
+    background: rgba(30,27,58,0.8);
+    border: 1px dashed rgba(148,163,184,0.15);
     color: #64748b;
 }
+.time-slot .time-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.45);
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+    margin-bottom: 2px;
+}
+.time-slot .time-letter {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    font-family: 'Space Mono', monospace;
+}
 
-/* Stat card pulse animation */
+/* ─── Day Selector (DailyLogger) ─── */
+.day-selector {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    padding: 4px 0;
+}
+.day-chip {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(148,163,184,0.1);
+    background: transparent;
+    color: #94a3b8;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    text-align: center;
+    min-width: 60px;
+}
+.day-chip:hover {
+    border-color: rgba(99,102,241,0.3);
+    color: #a5b4fc;
+}
+.day-chip.active {
+    background: rgba(99,102,241,0.15);
+    border-color: rgba(99,102,241,0.3);
+    color: #a5b4fc;
+    font-weight: 600;
+}
+
+/* ─── Category Picker (DailyLogger) ─── */
+.category-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+.category-pick-btn {
+    padding: 12px 8px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+}
+.category-pick-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 16px rgba(99,102,241,0.2);
+}
+.category-pick-btn .cat-letter {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    font-family: 'Space Mono', monospace;
+}
+.category-pick-btn .cat-name {
+    font-size: 10px;
+    color: rgba(255,255,255,0.8);
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 2px;
+}
+
+/* ─── Highlight Card ─── */
+.highlight-card {
+    background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.08));
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+/* ─── Progress Bar ─── */
+.lt-progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(148,163,184,0.08);
+    overflow: hidden;
+}
+.lt-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ─── Tag / Badge ─── */
+.lt-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-block;
+}
+.lt-tag-indigo {
+    background: rgba(99,102,241,0.1);
+    color: #818cf8;
+}
+.lt-tag-green {
+    background: rgba(34,197,94,0.12);
+    color: #22c55e;
+}
+.lt-tag-yellow {
+    background: rgba(234,179,8,0.12);
+    color: #eab308;
+}
+.lt-tag-red {
+    background: rgba(239,68,68,0.12);
+    color: #ef4444;
+}
+.lt-tag-muted {
+    background: rgba(148,163,184,0.08);
+    color: #94a3b8;
+}
+
+/* ─── Toggle Switch ─── */
+.lt-toggle {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    border: none;
+}
+.lt-toggle.on { background: #6366f1; }
+.lt-toggle.off { background: rgba(148,163,184,0.15); }
+.lt-toggle .lt-toggle-knob {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 3px;
+    transition: left 0.2s;
+}
+.lt-toggle.on .lt-toggle-knob { left: 23px; }
+.lt-toggle.off .lt-toggle-knob { left: 3px; }
+
+/* ─── Kanban Column ─── */
+.kanban-col {
+    background: rgba(15,23,42,0.3);
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.06);
+    padding: 12px;
+}
+.kanban-card {
+    background: rgba(15,23,42,0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(148,163,184,0.08);
+    padding: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.kanban-card:hover {
+    border-color: rgba(99,102,241,0.2);
+}
+
+/* ─── Book Card ─── */
+.book-card {
+    background: rgba(15,23,42,0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.08);
+    padding: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+.book-cover {
+    width: 48px;
+    height: 64px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.book-cover span {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    font-family: 'Space Mono', monospace;
+}
+
+/* ─── Button Styles ─── */
+.lt-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+.lt-btn-primary {
+    background: #6366f1;
+    color: white;
+}
+.lt-btn-primary:hover {
+    background: #5558e6;
+}
+.lt-btn-ghost {
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.2);
+    color: #818cf8;
+}
+.lt-btn-ghost:hover {
+    background: rgba(99,102,241,0.2);
+}
+
+/* ─── Login Page ─── */
+.login-bg {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #0c0a1a 0%, #1a1333 40%, #0f172a 100%);
+    padding: 20px;
+    position: relative;
+}
+.login-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: orbFloat 25s ease-in-out infinite;
+}
+@keyframes orbFloat {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* ─── Settings List ─── */
+.settings-section {
+    margin-bottom: 20px;
+}
+.settings-group {
+    background: rgba(15,23,42,0.5);
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.08);
+    overflow: hidden;
+}
+.settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+}
+.settings-row + .settings-row {
+    border-top: 1px solid rgba(148,163,184,0.06);
+}
+.settings-row .settings-label {
+    color: #e2e8f0;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+}
+.settings-row .settings-value {
+    color: #94a3b8;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* ─── Focus Ring (Productivity) ─── */
+.focus-ring-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.focus-ring-label {
+    position: absolute;
+    text-align: center;
+}
+
+/* ─── Stat card pulse animation ─── */
 @keyframes subtle-pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
     50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
 }
+.kpi-card { animation: subtle-pulse 3s ease-in-out infinite; }
 
-.kpi-card {
-    animation: subtle-pulse 3s ease-in-out infinite;
-}
-
-/* Category badge */
-.category-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: 'Space Mono', monospace;
-}
-
-/* Smooth page transitions */
-.page-transition {
-    animation: fadeSlideIn 0.25s ease-out;
-}
-
+/* ─── Smooth page transitions ─── */
+.page-transition { animation: fadeSlideIn 0.25s ease-out; }
 @keyframes fadeSlideIn {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* MudBlazor tab override */
-.mud-tab.mud-tab-active {
-    color: #6366F1 !important;
+/* ─── Spin animation ─── */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
 }
 
-/* Mobile adjustments */
-@media (max-width: 600px) {
-    .time-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
-    .time-slot {
-        height: 40px;
-        font-size: 10px;
-    }
+/* ─── MudBlazor Overrides ─── */
+.mud-card, .mud-paper { backdrop-filter: blur(12px); }
+
+.mud-input-outlined .mud-input-outlined-border {
+    border-color: rgba(148,163,184,0.15) !important;
+}
+.mud-input-outlined:hover .mud-input-outlined-border {
+    border-color: #6366F1 !important;
+}
+.mud-tab.mud-tab-active { color: #6366F1 !important; }
+
+/* Hide MudBlazor drawer/appbar (we use custom sidebar) */
+.mud-appbar { display: none !important; }
+.mud-drawer { display: none !important; }
+
+/* Override MudMainContent to remove left margin from old drawer */
+.mud-main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ─── Mobile Adjustments ─── */
+@media (max-width: 768px) {
+    .lt-sidebar { display: none; }
+    .lt-main { margin-left: 0; padding: 16px; }
+    .time-grid { grid-template-columns: repeat(6, 1fr); }
+    .time-slot { min-height: 44px; font-size: 10px; }
 }

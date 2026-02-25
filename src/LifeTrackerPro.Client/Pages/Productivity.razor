@@ -1,0 +1,153 @@
+@page "/productivity"
+
+<PageTitle>Productivity — LifeTracker Pro</PageTitle>
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <div>
+        <h2 class="heading-display" style="font-size:24px; margin:0 0 4px;">Productivity Hub</h2>
+        <p class="subtitle-text" style="margin:0;">Optimize focus, track output, crush goals</p>
+    </div>
+</div>
+
+<!-- Morning Briefing AI Card -->
+<div style="background:linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.08)); border:1px solid rgba(99,102,241,0.15); border-radius:16px; padding:20px; margin-bottom:20px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:#818cf8;"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg>
+        <span style="color:#a5b4fc; font-size:13px; font-weight:600; font-family:'DM Sans',sans-serif;">AI Morning Briefing</span>
+        <span class="lt-tag lt-tag-indigo" style="margin-left:auto;">Powered by AI</span>
+    </div>
+    <p style="color:#e2e8f0; font-size:14px; font-family:'DM Sans',sans-serif; line-height:1.6; margin:0;">
+        Good morning! Yesterday you logged <strong style="color:#a5b4fc;">8 productive hours</strong> — 
+        that's <strong style="color:#22c55e;">15% above</strong> your weekly average. Your exercise streak 
+        is at 15 days. Today's focus: wrap up the project milestone and maintain your reading habit. 
+        You have 3 tasks planned. Let's make it count! 🚀
+    </p>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+    <!-- Focus Score Ring -->
+    <div class="chart-card" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div class="chart-title" style="align-self:flex-start;">Today's Focus Score</div>
+        <div class="focus-ring-container" style="width:160px; height:160px; margin:12px 0;">
+            <svg width="160" height="160" viewBox="0 0 160 160">
+                <!-- Background ring -->
+                <circle cx="80" cy="80" r="64" fill="none" stroke="rgba(148,163,184,0.08)" stroke-width="12" />
+                <!-- Progress ring -->
+                <circle cx="80" cy="80" r="64" fill="none" stroke="url(#focusGradient)" stroke-width="12"
+                        stroke-linecap="round" stroke-dasharray="@((402.1 * _focusScore / 100).ToString("F1")) 402.1"
+                        transform="rotate(-90 80 80)" />
+                <defs>
+                    <linearGradient id="focusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="100%" stop-color="#8b5cf6" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="focus-ring-label">
+                <div style="font-size:32px; font-weight:800; color:#f1f5f9; font-family:'DM Sans',sans-serif;">@_focusScore</div>
+                <div style="font-size:11px; color:#64748b; font-family:'DM Sans',sans-serif;">/ 100</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:8px;">
+            <div style="text-align:center;">
+                <div style="color:#22c55e; font-size:14px; font-weight:700; font-family:'Space Mono',monospace;">+12%</div>
+                <div style="color:#64748b; font-size:10px;">vs last week</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="color:#a5b4fc; font-size:14px; font-weight:700; font-family:'Space Mono',monospace;">Top 15%</div>
+                <div style="color:#64748b; font-size:10px;">of your days</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Planned vs Actual -->
+    <div class="chart-card">
+        <div class="chart-title">Planned vs Actual (This Week)</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            @foreach (var day in _weekComparison)
+            {
+                <div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="color:#94a3b8; font-size:11px; font-family:'DM Sans',sans-serif;">@day.Day</span>
+                        <span style="color:#475569; font-size:10px; font-family:'Space Mono',monospace;">@day.Actual / @day.Planned hrs</span>
+                    </div>
+                    <div style="display:flex; gap:4px; height:16px;">
+                        <div style="flex:@day.Planned; border-radius:4px; background:rgba(99,102,241,0.2); position:relative; overflow:hidden;">
+                            <div style="position:absolute; inset:0; width:@(day.Planned > 0 ? (day.Actual / day.Planned * 100) : 0)%; background:#6366f1; border-radius:4px;"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Smart Task Queue -->
+<div class="chart-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="chart-title" style="margin:0;">Smart Task Queue</div>
+        <button class="lt-btn lt-btn-ghost" style="font-size:11px; padding:6px 12px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Task
+        </button>
+    </div>
+
+    @foreach (var task in _tasks)
+    {
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(148,163,184,0.06);">
+            <button @onclick="@(() => ToggleTask(task))"
+                    style="width:20px; height:20px; border-radius:6px; border:2px solid @(task.Done ? "#22c55e" : "rgba(148,163,184,0.2)"); background:@(task.Done ? "#22c55e" : "transparent"); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.15s;">
+                @if (task.Done)
+                {
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>
+                }
+            </button>
+            <div style="flex:1;">
+                <div style="color:@(task.Done ? "#64748b" : "#e2e8f0"); font-size:13px; font-weight:@(task.Done ? "400" : "600"); font-family:'DM Sans',sans-serif; text-decoration:@(task.Done ? "line-through" : "none");">
+                    @task.Title
+                </div>
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <span class="lt-tag @(task.Priority == "High" ? "lt-tag-red" : task.Priority == "Med" ? "lt-tag-yellow" : "lt-tag-muted")">@task.Priority</span>
+                    <span class="lt-tag lt-tag-indigo">@task.Category</span>
+                </div>
+            </div>
+            <span style="color:#475569; font-size:11px; font-family:'Space Mono',monospace;">@task.Duration</span>
+        </div>
+    }
+</div>
+
+@code {
+    private int _focusScore = 78;
+
+    private List<WeekDay> _weekComparison = new()
+    {
+        new("Mon", 8, 7.5),
+        new("Tue", 8, 8),
+        new("Wed", 8, 6),
+        new("Thu", 8, 9),
+        new("Fri", 6, 5),
+        new("Sat", 4, 3),
+        new("Sun", 2, 2),
+    };
+
+    private List<TaskItem> _tasks = new()
+    {
+        new("Complete project milestone", "High", "Work", "2h", false),
+        new("Review pull requests", "Med", "Work", "1h", false),
+        new("30 min exercise", "High", "Health", "30m", true),
+        new("Read 20 pages", "Med", "Learning", "30m", false),
+        new("Update weekly report", "Low", "Work", "30m", false),
+    };
+
+    private void ToggleTask(TaskItem task)
+    {
+        var index = _tasks.IndexOf(task);
+        if (index >= 0)
+        {
+            _tasks[index] = task with { Done = !task.Done };
+        }
+    }
+
+    private record WeekDay(string Day, double Planned, double Actual);
+    private record TaskItem(string Title, string Priority, string Category, string Duration, bool Done);
+}
