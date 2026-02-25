@@ -68,3 +68,5 @@ coverage*/
 *.tmp
 *.cache
 *.db
+*.db-shm
+*.db-wal
