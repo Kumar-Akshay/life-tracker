@@ -51,7 +51,13 @@ public static class DependencyInjection
         services.AddScoped<IJwtService, JwtService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddSingleton<IEncryptionService>(_ =>
-            new EncryptionService(configuration["Encryption:Key"] ?? "LifeTrackerPro-Default-Key-Change-Me!"));
+        {
+            var encryptionKey = configuration["Encryption:Key"];
+            if (string.IsNullOrWhiteSpace(encryptionKey))
+                throw new InvalidOperationException(
+                    "Encryption:Key is not configured. Set it in appsettings or environment variables before starting the application.");
+            return new EncryptionService(encryptionKey);
+        });
 
         return services;
     }

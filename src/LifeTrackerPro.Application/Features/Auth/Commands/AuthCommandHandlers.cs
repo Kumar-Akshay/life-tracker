@@ -25,7 +25,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
         _userManager = userManager;
         _jwtService = jwtService;
         _context = context;
-        _defaultCategories = categoryOptions.Value.Categories;
+        _defaultCategories = categoryOptions.Value?.Categories ?? [];
     }
 
     public async Task<ApiResponse<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)

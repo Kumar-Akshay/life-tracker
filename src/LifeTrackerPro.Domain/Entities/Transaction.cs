@@ -9,5 +9,5 @@ public class Transaction : BaseUserEntity
     public decimal Amount { get; set; }
     public string? CategoryTag { get; set; }
     public bool IsRecurring { get; set; }
-    public string? CurrencyCode { get; set; }
+    public string CurrencyCode { get; set; } = "USD";
 }

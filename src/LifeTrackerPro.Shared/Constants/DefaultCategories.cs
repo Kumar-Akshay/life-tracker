@@ -43,5 +43,5 @@ public class DefaultCategoriesOptions
 {
     public const string SectionName = "DefaultCategories";
 
-    public List<DefaultCategoryDef> Categories { get; set; } = DefaultCategories.All;
+    public List<DefaultCategoryDef> Categories { get; set; } = new List<DefaultCategoryDef>(DefaultCategories.All);
 }

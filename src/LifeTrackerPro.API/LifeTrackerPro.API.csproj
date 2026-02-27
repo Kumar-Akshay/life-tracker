@@ -17,7 +17,7 @@
 
     <!-- Author & Organisation -->
     <Authors>Akshay</Authors>
-    <Company>YourOrganisation</Company>
+    <Company>LifeTrackerPro</Company>    
     <Copyright>Copyright © 2025 Akshay. All rights reserved.</Copyright>
 
     <!-- Optional -->
@@ -33,6 +33,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
