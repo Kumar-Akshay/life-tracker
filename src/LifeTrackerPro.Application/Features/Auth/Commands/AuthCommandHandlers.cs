@@ -5,6 +5,7 @@ using LifeTrackerPro.Shared.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace LifeTrackerPro.Application.Features.Auth.Commands;
 
@@ -13,15 +14,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IJwtService _jwtService;
     private readonly IApplicationDbContext _context;
+    private readonly List<DefaultCategoryDef> _defaultCategories;
 
     public RegisterCommandHandler(
         UserManager<ApplicationUser> userManager,
         IJwtService jwtService,
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        IOptions<DefaultCategoriesOptions> categoryOptions)
     {
         _userManager = userManager;
         _jwtService = jwtService;
         _context = context;
+        _defaultCategories = categoryOptions.Value.Categories;
     }
 
     public async Task<ApiResponse<AuthResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -43,7 +47,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, ApiRespon
             return ApiResponse<AuthResponseDto>.Fail(result.Errors.Select(e => e.Description).ToList());
 
         // Seed default categories
-        foreach (var cat in DefaultCategories.All)
+        foreach (var cat in _defaultCategories)
         {
             _context.Categories.Add(new Category
             {

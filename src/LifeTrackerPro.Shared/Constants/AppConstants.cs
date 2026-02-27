@@ -3,8 +3,8 @@ namespace LifeTrackerPro.Shared.Constants;
 public static class AppConstants
 {
     public const string AppName = "LifeTracker Pro";
-    public const string DefaultTimezone = "Asia/Kolkata";
-    public const string DefaultCurrency = "INR";
+    public const string DefaultTimezone = "UTC";
+    public const string DefaultCurrency = "USD";
     public const int MaxHourSlots = 24;
     public const int MaxMoodScore = 5;
     public const int MinMoodScore = 1;

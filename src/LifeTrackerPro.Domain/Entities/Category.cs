@@ -7,7 +7,7 @@ public class Category : BaseUserEntity
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Letter { get; set; } = string.Empty;
-    public string Color { get; set; } = "#6366F1";
+    public string Color { get; set; } = string.Empty;
     public string? IconName { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;

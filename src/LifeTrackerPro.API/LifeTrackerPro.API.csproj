@@ -4,6 +4,29 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <RootNamespace>LifeTrackerPro</RootNamespace>
+    <AssemblyName>LifeTrackerPro</AssemblyName>
+
+    <!-- Project Info -->
+    <Product>LifeTracker Pro</Product>
+    <Description>A comprehensive life tracking application for activity logging, spending management, goal setting, and AI-powered schedule optimization.</Description>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+
+    <!-- Author & Organisation -->
+    <Authors>Akshay</Authors>
+    <Company>YourOrganisation</Company>
+    <Copyright>Copyright © 2025 Akshay. All rights reserved.</Copyright>
+
+    <!-- Optional -->
+    <RepositoryUrl>https://github.com/kumar-akkiy/LifeTrackerPro</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>blazor;life-tracking;productivity;activity-tracker;goal-setting;ai-powered</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
   </PropertyGroup>
 
   <ItemGroup>

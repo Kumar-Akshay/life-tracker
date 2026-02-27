@@ -1,15 +1,15 @@
 using LifeTrackerPro.Application;
 using LifeTrackerPro.Application.Common.Interfaces;
-using LifeTrackerPro.Infrastructure;
 using LifeTrackerPro.Infrastructure.Persistence;
 using LifeTrackerPro.API;
 using LifeTrackerPro.API.Middleware;
 using LifeTrackerPro.API.Services;
+using LifeTrackerPro.Shared.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Threading.RateLimiting;
+using LifeTrackerPro.Infrastructure.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Application & Infrastructure layers
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Default categories from configuration (falls back to hardcoded defaults)
+builder.Services.Configure<DefaultCategoriesOptions>(
+    builder.Configuration.GetSection(DefaultCategoriesOptions.SectionName));
 
 // Current user service (extracts from HttpContext)
 builder.Services.AddHttpContextAccessor();

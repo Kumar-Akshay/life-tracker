@@ -1,5 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <RootNamespace>LifeTrackerPro.Application</RootNamespace>
+    <AssemblyName>LifeTrackerPro.Application</AssemblyName>
+
+    <!-- Project Info -->
+    <Product>LifeTracker Pro Application Layer</Product>
+    <Description>The application layer of LifeTracker Pro, containing business logic, services, and application-specific interfaces.</Description>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LifeTrackerPro.Domain\LifeTrackerPro.Domain.csproj" />
     <ProjectReference Include="..\LifeTrackerPro.Shared\LifeTrackerPro.Shared.csproj" />
@@ -12,11 +27,5 @@
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
 
 </Project>

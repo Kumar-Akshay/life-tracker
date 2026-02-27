@@ -9,8 +9,8 @@ public class UserSettings : BaseUserEntity
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Dark;
     public bool AiAutoFillEnabled { get; set; }
     public decimal? MonthlyBudget { get; set; }
-    public string CurrencyCode { get; set; } = "INR";
-    public string Timezone { get; set; } = "Asia/Kolkata";
+    public string? CurrencyCode { get; set; }
+    public string? Timezone { get; set; }
     public bool NotificationsEnabled { get; set; } = true;
     public string? WeekStartDay { get; set; } = "Monday";
 }

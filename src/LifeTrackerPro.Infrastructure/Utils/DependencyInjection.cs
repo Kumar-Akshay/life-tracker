@@ -7,15 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LifeTrackerPro.Infrastructure;
+namespace LifeTrackerPro.Infrastructure.Utils;
 
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Database — use SQLite for development, PostgreSQL for production
-        var usePostgres = !string.IsNullOrEmpty(configuration.GetConnectionString("DefaultConnection"))
-            && configuration.GetConnectionString("DefaultConnection")!.Contains("Host=");
+        var usePostgres = !string.IsNullOrEmpty(configuration.GetConnectionString("DefaultConnection")) && configuration.GetConnectionString("DefaultConnection")!.Contains("Host=");
 
         services.AddDbContext<LifeTrackerDbContext>(options =>
         {
