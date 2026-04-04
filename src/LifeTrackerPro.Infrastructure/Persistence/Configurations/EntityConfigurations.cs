@@ -1,4 +1,5 @@
 using LifeTrackerPro.Domain.Entities;
+using LifeTrackerPro.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -108,6 +109,40 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
     }
 }
 
+public class BookConfiguration : IEntityTypeConfiguration<Book>
+{
+    public void Configure(EntityTypeBuilder<Book> builder)
+    {
+        builder.ToTable("books");
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Title).HasMaxLength(300).IsRequired();
+        builder.Property(e => e.Author).HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Color).HasMaxLength(20).HasDefaultValue("#6366F1");
+        builder.Property(e => e.Notes).HasMaxLength(2000);
+        builder.Property(e => e.Status).HasConversion<int>().HasDefaultValue(BookStatus.ToStart);
+
+        builder.HasIndex(e => e.UserId);
+    }
+}
+
+public class VideoConfiguration : IEntityTypeConfiguration<Video>
+{
+    public void Configure(EntityTypeBuilder<Video> builder)
+    {
+        builder.ToTable("videos");
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Title).HasMaxLength(300).IsRequired();
+        builder.Property(e => e.Platform).HasMaxLength(100).IsRequired();
+        builder.Property(e => e.Tags).HasColumnType("jsonb").HasDefaultValue("[]");
+        builder.Property(e => e.Notes).HasMaxLength(2000);
+        builder.Property(e => e.Status).HasConversion<int>().HasDefaultValue(VideoStatus.ToStart);
+
+        builder.HasIndex(e => e.UserId);
+    }
+}
+
 public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
 {
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)
@@ -119,6 +154,8 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.HasMany(u => u.DailyLogs).WithOne().HasForeignKey(d => d.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Categories).WithOne().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.Transactions).WithOne().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(u => u.Books).WithOne().HasForeignKey(b => b.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(u => u.Videos).WithOne().HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(u => u.Settings).WithOne().HasForeignKey<UserSettings>(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(u => u.RefreshTokens).WithOne().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Cascade);
     }

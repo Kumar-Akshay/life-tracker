@@ -1,4 +1,5 @@
 @page "/goals"
+@inject DashboardService DashboardSvc
 
 <PageTitle>Goals — LifeTracker Pro</PageTitle>
 
@@ -6,71 +7,81 @@
     <h1 class="lt-page-heading">Your <span class="accent">Goals</span></h1>
     <p class="lt-page-subtitle">Track your ambitions across every time horizon</p>
 
-    <!-- Streaks -->
-    <div class="lt-grid-3" style="margin-bottom:30px;">
-        @foreach (var streak in _streaks)
-        {
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else
+    {
+        <!-- Streaks -->
+        <div class="lt-grid-3" style="margin-bottom:30px;">
             <div class="lt-card accent" style="text-align:center; padding:20px;">
-                <div style="font-size:32px; margin-bottom:6px;">@streak.Emoji</div>
-                <div style="font-size:28px; font-weight:700; color:var(--crail); font-family:var(--font-serif);">@streak.Value</div>
-                <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.12em; margin-top:4px;">@streak.Label Streak</div>
+                <div style="font-size:32px; margin-bottom:6px;">🔥</div>
+                <div style="font-size:28px; font-weight:700; color:var(--crail); font-family:var(--font-serif);">@_streak days</div>
+                <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.12em; margin-top:4px;">Logging Streak</div>
+            </div>
+            <div class="lt-card" style="text-align:center; padding:20px;">
+                <div style="font-size:32px; margin-bottom:6px;">◉</div>
+                <div style="font-size:28px; font-weight:700; color:var(--crail); font-family:var(--font-serif);">@_daysLogged</div>
+                <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.12em; margin-top:4px;">Days Logged</div>
+            </div>
+            <div class="lt-card" style="text-align:center; padding:20px;">
+                <div style="font-size:32px; margin-bottom:6px;">◎</div>
+                <div style="font-size:28px; font-weight:700; color:var(--crail); font-family:var(--font-serif);">@_totalHours h</div>
+                <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.12em; margin-top:4px;">Hours Tracked</div>
+            </div>
+        </div>
+
+        <!-- Category Goals — derived from this month's data -->
+        @if (_hoursPerCategory.Count > 0)
+        {
+            <div style="margin-bottom:28px;">
+                <div class="lt-section-label"><span>Monthly Category Hours</span></div>
+                @foreach (var cat in _hoursPerCategory.Take(6))
+                {
+                    <div class="lt-card" style="margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span style="color:var(--ink); font-size:14px; font-family:var(--font-sans); font-weight:600;">@cat.CategoryName</span>
+                            <span style="color:var(--crail); font-size:14px; font-weight:800; font-family:var(--font-mono);">@cat.Hours h</span>
+                        </div>
+                        <div class="lt-progress-track">
+                            <div class="lt-progress-fill crail" style="width:@((int)cat.Percentage)%; background:@cat.Color;"></div>
+                        </div>
+                        <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); margin-top:5px;">@cat.Percentage% of logged time</div>
+                    </div>
+                }
             </div>
         }
-    </div>
-
-    <!-- Goal Groups -->
-    @foreach (var group in _goalGroups)
-    {
-        <div style="margin-bottom:28px;">
-            <div class="lt-section-label"><span>@group.Type Goals</span></div>
-            @foreach (var goal in group.Items)
-            {
-                <div class="lt-card" style="margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span style="color:var(--ink); font-size:14px; font-family:var(--font-sans); font-weight:600;">@goal.Name</span>
-                        <span style="color:@(goal.Progress == 100 ? "var(--success)" : goal.Progress > 40 ? "var(--crail)" : "var(--ink-muted)"); font-size:14px; font-weight:800; font-family:var(--font-mono);">@goal.Progress%</span>
-                    </div>
-                    <div class="lt-progress-track">
-                        <div class="lt-progress-fill @(goal.Progress == 100 ? "success" : "crail")" style="width:@goal.Progress%;"></div>
-                    </div>
-                </div>
-            }
-        </div>
+        else
+        {
+            <div class="lt-card" style="text-align:center; padding:40px; color:var(--ink-muted);">
+                <div style="font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:0.1em;">Start logging daily to see goal progress</div>
+            </div>
+        }
     }
 </div>
 
 @code {
-    private record StreakInfo(string Label, string Value, string Emoji);
-    private record GoalItem(string Name, int Progress);
-    private record GoalGroup(string Type, List<GoalItem> Items);
+    private int _streak;
+    private int _daysLogged;
+    private int _totalHours;
+    private List<CategoryHoursDto> _hoursPerCategory = new();
+    private bool _loading = true;
 
-    private readonly List<StreakInfo> _streaks = new()
+    protected override async Task OnInitializedAsync()
     {
-        new("Exercise", "5 days", "🔥"),
-        new("Logging", "28 days", "◉"),
-        new("Budget", "12 days", "◎")
-    };
-
-    private readonly List<GoalGroup> _goalGroups = new()
-    {
-        new("Daily", new List<GoalItem>
+        try
         {
-            new("Sleep ≥ 7h", 100),
-            new("Exercise ≥ 1h", 100),
-            new("Spend ≤ $20", 100),
-            new("Read 30 min", 0)
-        }),
-        new("Monthly", new List<GoalItem>
-        {
-            new("Read 4 books", 50),
-            new("Workout 20+ days", 65),
-            new("Save $500", 44)
-        }),
-        new("Yearly", new List<GoalItem>
-        {
-            new("Travel 3 countries", 0),
-            new("Lose 5 kg", 48),
-            new("12 courses", 17)
-        })
-    };
+            var dash = await DashboardSvc.GetAsync("month");
+            if (dash is not null)
+            {
+                _streak = dash.CurrentStreak;
+                _daysLogged = dash.DaysLogged;
+                _totalHours = dash.TotalLoggedHours;
+                _hoursPerCategory = dash.HoursPerCategory;
+            }
+        }
+        catch { }
+        finally { _loading = false; }
+    }
 }

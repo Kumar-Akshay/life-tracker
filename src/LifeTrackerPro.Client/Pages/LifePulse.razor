@@ -1,4 +1,5 @@
 @page "/life-pulse"
+@inject DashboardService DashboardSvc
 
 <PageTitle>Life Pulse — LifeTracker Pro</PageTitle>
 
@@ -6,84 +7,139 @@
     <h1 class="lt-page-heading">Life <span class="accent">Pulse</span></h1>
     <p class="lt-page-subtitle">Holistic wellness score — how every dimension of life connects</p>
 
-    <div style="display:grid; grid-template-columns:280px 1fr; gap:20px; margin-bottom:28px;">
-        <!-- Overall Score -->
-        <div class="lt-card accent" style="text-align:center; padding:32px;">
-            <svg width="180" height="180" viewBox="0 0 180 180" style="margin:0 auto; display:block;">
-                <circle cx="90" cy="90" r="78" fill="none" stroke="var(--pampas)" stroke-width="12" />
-                <circle cx="90" cy="90" r="78" fill="none" stroke="var(--crail)" stroke-width="12"
-                        stroke-dasharray="@((int)(_overallScore / 100.0 * 490)) 490"
-                        stroke-linecap="round" transform="rotate(-90 90 90)"
-                        style="transition:stroke-dasharray 2s cubic-bezier(0.16,1,0.3,1); filter:drop-shadow(0 0 12px rgba(193,95,60,0.25));" />
-                <text x="90" y="82" text-anchor="middle" fill="var(--ink)" font-size="48" font-weight="700"
-                      font-family="'Libre Baskerville',serif">@_overallScore</text>
-                <text x="90" y="106" text-anchor="middle" fill="var(--ink-muted)" font-size="12"
-                      font-family="'JetBrains Mono',monospace">/ 100</text>
-            </svg>
-            <div style="font-size:11px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-top:14px;">
-                Overall Life Score
-            </div>
-        </div>
-
-        <!-- Dimension Scores -->
-        <div class="lt-card">
-            <div class="lt-section-label"><span>Dimension Scores</span></div>
-            <div style="display:grid; gap:14px;">
-                @foreach (var score in _scores)
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else
+    {
+        <div style="display:grid; grid-template-columns:280px 1fr; gap:20px; margin-bottom:28px;">
+            <!-- Overall Score -->
+            <div class="lt-card accent" style="text-align:center; padding:32px;">
+                <svg width="180" height="180" viewBox="0 0 180 180" style="margin:0 auto; display:block;">
+                    <circle cx="90" cy="90" r="78" fill="none" stroke="var(--pampas)" stroke-width="12" />
+                    <circle cx="90" cy="90" r="78" fill="none" stroke="var(--crail)" stroke-width="12"
+                            stroke-dasharray="@((int)(_overallScore / 100.0 * 490)) 490"
+                            stroke-linecap="round" transform="rotate(-90 90 90)"
+                            style="transition:stroke-dasharray 2s cubic-bezier(0.16,1,0.3,1); filter:drop-shadow(0 0 12px rgba(193,95,60,0.25));" />
+                    <text x="90" y="82" text-anchor="middle" fill="var(--ink)" font-size="48" font-weight="700"
+                          font-family="'Libre Baskerville',serif">@_overallScore</text>
+                    <text x="90" y="106" text-anchor="middle" fill="var(--ink-muted)" font-size="12"
+                          font-family="'JetBrains Mono',monospace">/ 100</text>
+                </svg>
+                <div style="font-size:11px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-top:14px;">
+                    Overall Life Score
+                </div>
+                @if (_daysLogged == 0)
                 {
-                    <div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                            <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@score.Label</span>
-                            <span style="font-size:13px; color:@score.Color; font-family:var(--font-mono); font-weight:800;">@score.Value</span>
-                        </div>
-                        <div class="lt-progress-track">
-                            <div class="lt-progress-fill" style="width:@score.Value%; background:@score.Color;"></div>
-                        </div>
-                    </div>
+                    <div style="font-size:11px; color:var(--ink-muted); font-family:var(--font-sans); margin-top:8px;">Log daily activity to build your score</div>
                 }
             </div>
-        </div>
-    </div>
 
-    <!-- Correlations -->
-    <div class="lt-card">
-        <div class="lt-section-label"><span>Discovered Correlations</span></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-            @foreach (var c in _correlations)
-            {
-                <div class="lt-correlation @c.Type">
-                    <div style="font-size:12px; color:var(--ink); font-family:var(--font-sans); font-weight:700; margin-bottom:4px;">When @c.Condition</div>
-                    <div style="font-size:13px; font-family:var(--font-mono); font-weight:700;
-                                color:@(c.Type == "positive" ? "var(--success)" : c.Type == "negative" ? "var(--danger)" : "var(--ink-soft)");">
-                        @c.Result
-                    </div>
+            <!-- Dimension Scores -->
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Dimension Scores</span></div>
+                <div style="display:grid; gap:14px;">
+                    @foreach (var score in _scores)
+                    {
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                                <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@score.Label</span>
+                                <span style="font-size:13px; color:@score.Color; font-family:var(--font-mono); font-weight:800;">@score.Value</span>
+                            </div>
+                            <div class="lt-progress-track">
+                                <div class="lt-progress-fill" style="width:@score.Value%; background:@score.Color;"></div>
+                            </div>
+                        </div>
+                    }
                 </div>
-            }
+            </div>
         </div>
-    </div>
+
+        <!-- Category Breakdown -->
+        @if (_hoursPerCategory.Count > 0)
+        {
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Time Allocation This Month</span></div>
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;">
+                    @foreach (var cat in _hoursPerCategory.Take(6))
+                    {
+                        <div style="padding:14px; border-radius:12px; background:var(--pampas); border:1px solid var(--border);">
+                            <div style="font-size:12px; font-weight:700; color:var(--ink); font-family:var(--font-sans);">@cat.CategoryName</div>
+                            <div style="font-size:20px; font-weight:700; color:@cat.Color; font-family:var(--font-serif); margin-top:4px;">@cat.Hours h</div>
+                            <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@cat.Percentage%</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
 </div>
 
 @code {
     private record DimensionScore(string Label, int Value, string Color);
-    private record Correlation(string Condition, string Result, string Type);
 
-    private readonly List<DimensionScore> _scores = new()
+    private List<DimensionScore> _scores = new();
+    private List<CategoryHoursDto> _hoursPerCategory = new();
+    private int _overallScore;
+    private int _daysLogged;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        new("Sleep Quality", 82, "#6B8EC7"),
-        new("Physical Activity", 68, "#5B8C51"),
-        new("Productivity", 78, "#C15F3C"),
-        new("Social Balance", 55, "#5CAFC7"),
-        new("Financial Health", 91, "#C49A2D"),
-        new("Learning", 42, "#8E6BC7")
-    };
+        try
+        {
+            var dash = await DashboardSvc.GetAsync("month");
+            if (dash is not null)
+            {
+                _daysLogged = dash.DaysLogged;
+                _hoursPerCategory = dash.HoursPerCategory;
 
-    private int _overallScore => (int)Math.Round(_scores.Average(s => s.Value));
+                // Build dimension scores from real data
+                var totalH = dash.TotalLoggedHours;
+                int GetCatHours(params string[] names)
+                {
+                    return dash.HoursPerCategory
+                        .Where(c => names.Any(n => c.CategoryName.Contains(n, StringComparison.OrdinalIgnoreCase) ||
+                                                    c.CategoryCode.Equals(n, StringComparison.OrdinalIgnoreCase)))
+                        .Sum(c => c.Hours);
+                }
 
-    private readonly List<Correlation> _correlations = new()
-    {
-        new("Sleep ≥ 8h", "Productivity ▲ 23%", "positive"),
-        new("Exercise days", "Mood ▲ 31%", "positive"),
-        new("Spend > $50/day", "Stress ▲ 18%", "negative"),
-        new("Social < 1h", "Focus ▲ 15%", "neutral")
-    };
+                var sleepH = GetCatHours("Sleep", "S");
+                var exerciseH = GetCatHours("Exercise", "E");
+                var workH = GetCatHours("Work", "W");
+                var socialH = GetCatHours("Social", "O");
+                var learningH = GetCatHours("Learning", "L");
+
+                // Score 0-100: normalise to expected monthly amounts
+                int Score(int actual, int target) => Math.Min((int)(actual * 100.0 / Math.Max(target, 1)), 100);
+
+                var sleepScore = Score(sleepH, 210);       // 7h/day × 30 days
+                var exerciseScore = Score(exerciseH, 30);  // 1h/day × 30
+                var productivityScore = dash.AverageProductivityScore > 0
+                    ? (int)(dash.AverageProductivityScore * 10)
+                    : Score(workH, 240);                   // 8h/day × 30
+                var socialScore = Score(socialH, 30);      // 1h/day × 30
+                var financialScore = dash.SpendSummary.BudgetRemaining.HasValue
+                    ? Math.Max(0, Math.Min(100, (int)(dash.SpendSummary.BudgetRemaining.Value /
+                        (dash.SpendSummary.BudgetRemaining.Value + dash.TotalSpent + 1) * 100)))
+                    : 70;
+                var learningScore = Score(learningH, 15);  // 30min/day × 30
+
+                _scores = new()
+                {
+                    new("Sleep", sleepScore, "#6B8EC7"),
+                    new("Physical Activity", exerciseScore, "#5B8C51"),
+                    new("Productivity", productivityScore, "#C15F3C"),
+                    new("Social Balance", socialScore, "#5CAFC7"),
+                    new("Financial Health", financialScore, "#C49A2D"),
+                    new("Learning", learningScore, "#8E6BC7")
+                };
+
+                _overallScore = _scores.Count > 0 ? (int)Math.Round(_scores.Average(s => s.Value)) : 0;
+            }
+        }
+        catch { }
+        finally { _loading = false; }
+    }
 }

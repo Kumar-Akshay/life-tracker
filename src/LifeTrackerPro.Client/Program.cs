@@ -21,6 +21,9 @@ builder.Services.AddScoped<DailyLogService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<SettingsService>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<VideoService>();
+builder.Services.AddScoped<TransactionService>();
 builder.Services.AddScoped<AuthStateProvider>();
 
 await builder.Build().RunAsync();

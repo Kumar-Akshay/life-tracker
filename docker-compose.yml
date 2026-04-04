@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL 17
+  # ─────────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: lifetracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lifetrackerpro
+      POSTGRES_USER: lifetracker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lifetracker -d lifetrackerpro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # ASP.NET Core API
+  # ─────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: lifetracker-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=lifetrackerpro;Username=lifetracker;Password=${POSTGRES_PASSWORD:-changeme}"
+      Jwt__Key: ${JWT_KEY:-REPLACE_WITH_SECURE_32_CHAR_KEY_IN_PRODUCTION}
+      Jwt__Issuer: LifeTrackerPro
+      Jwt__Audience: LifeTrackerPro
+      Encryption__Key: ${ENCRYPTION_KEY:-REPLACE_WITH_SECURE_32_CHAR_KEY}
+      ClientUrl: http://localhost
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Blazor WebAssembly (Nginx)
+  # ─────────────────────────────────────────────
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: lifetracker-client
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
+    driver: local

@@ -1,0 +1,41 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy solution and project files first for layer caching
+COPY LifeTrackerPro.sln .
+COPY src/LifeTrackerPro.Domain/LifeTrackerPro.Domain.csproj src/LifeTrackerPro.Domain/
+COPY src/LifeTrackerPro.Shared/LifeTrackerPro.Shared.csproj src/LifeTrackerPro.Shared/
+COPY src/LifeTrackerPro.Application/LifeTrackerPro.Application.csproj src/LifeTrackerPro.Application/
+COPY src/LifeTrackerPro.Infrastructure/LifeTrackerPro.Infrastructure.csproj src/LifeTrackerPro.Infrastructure/
+COPY src/LifeTrackerPro.API/LifeTrackerPro.API.csproj src/LifeTrackerPro.API/
+
+RUN dotnet restore src/LifeTrackerPro.API/LifeTrackerPro.API.csproj
+
+# Copy all source code
+COPY src/ src/
+
+# Publish API
+RUN dotnet publish src/LifeTrackerPro.API/LifeTrackerPro.API.csproj \
+    --configuration Release \
+    --no-restore \
+    --output /app/publish
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+
+# Install EF tool for migrations at startup (optional; remove if migrations are handled separately)
+COPY --from=build /app/publish .
+
+# Non-root user for security
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8080
+EXPOSE 8081
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+ENTRYPOINT ["dotnet", "LifeTrackerPro.dll"]

@@ -6,6 +6,8 @@ public record DashboardDto
     public decimal TotalSpent { get; init; }
     public int CurrentStreak { get; init; }
     public int DaysLogged { get; init; }
+    public double AverageMoodScore { get; init; }
+    public double AverageProductivityScore { get; init; }
     public List<CategoryHoursDto> HoursPerCategory { get; init; } = new();
     public List<DailyBreakdownDto> DailyBreakdown { get; init; } = new();
     public SpendSummaryDto SpendSummary { get; init; } = new();

@@ -40,7 +40,10 @@ jobs:
         run: dotnet build LifeTrackerPro.sln --configuration Release --no-restore
 
       - name: Run unit tests
-        run: dotnet test tests/LifeTrackerPro.UnitTests/LifeTrackerPro.UnitTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        run: dotnet test tests/LifeTrackerPro.UnitTests/LifeTrackerPro.UnitTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=unit-test-results.trx" --collect:"XPlat Code Coverage"
+
+      - name: Run integration tests
+        run: dotnet test tests/LifeTrackerPro.IntegrationTests/LifeTrackerPro.IntegrationTests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=integration-test-results.trx"
 
       - name: Upload test results
         if: always()

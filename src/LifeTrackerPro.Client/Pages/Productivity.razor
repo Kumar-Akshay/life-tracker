@@ -1,4 +1,6 @@
 @page "/productivity"
+@inject DailyLogService LogSvc
+@inject DashboardService DashboardSvc
 
 <PageTitle>Productivity — LifeTracker Pro</PageTitle>
 
@@ -6,97 +8,149 @@
     <h1 class="lt-page-heading">Productivity <span class="accent">Hub</span></h1>
     <p class="lt-page-subtitle">Your daily command center for focus and execution</p>
 
-    <!-- Morning Briefing -->
-    <div class="lt-card accent lt-ai-summary" style="margin-bottom:22px;">
-        <div style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px;">
-            ☀ Morning Briefing
-        </div>
-        <div style="font-size:15px; color:var(--ink); font-family:var(--font-serif); line-height:1.8;">
-            <p style="margin:0 0 6px;">3 goals active: Sleep ≥7h ✓ · Exercise ≥1h ⏳ · Read 30min ⏳</p>
-            <p style="margin:0 0 6px;">Exercise streak: <strong>5 days</strong>. Yesterday: <strong>9h work</strong> (above avg).</p>
-            <p style="margin:0; color:var(--crail); font-style:italic;">"Consistency beats intensity. 28 days — remarkable."</p>
-        </div>
-    </div>
-
-    <div class="lt-chart-grid-2" style="margin-bottom:22px;">
-        <!-- Focus Score -->
-        <div class="lt-card">
-            <div class="lt-section-label"><span>Focus Score</span></div>
-            <div style="text-align:center; padding:10px 0;">
-                <svg width="150" height="150" viewBox="0 0 150 150">
-                    <circle cx="75" cy="75" r="62" fill="none" stroke="var(--pampas)" stroke-width="10" />
-                    <circle cx="75" cy="75" r="62" fill="none" stroke="var(--crail)" stroke-width="10"
-                            stroke-dasharray="@((int)(0.78 * 390)) 390"
-                            stroke-linecap="round" transform="rotate(-90 75 75)"
-                            style="transition:stroke-dasharray 2s ease; filter:drop-shadow(0 0 10px rgba(193,95,60,0.19));" />
-                    <text x="75" y="70" text-anchor="middle" fill="var(--ink)" font-size="40" font-weight="700"
-                          font-family="'Libre Baskerville',serif">78</text>
-                    <text x="75" y="92" text-anchor="middle" fill="var(--ink-muted)" font-size="12"
-                          font-family="'JetBrains Mono',monospace">/100</text>
-                </svg>
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else
+    {
+        <!-- Today summary -->
+        @if (_todayLog is not null)
+        {
+            <div class="lt-card accent lt-ai-summary" style="margin-bottom:22px;">
+                <div style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px;">
+                    ☀ Today — @DateTime.Today.ToString("dddd, MMMM d")
+                </div>
+                <div style="font-size:15px; color:var(--ink); font-family:var(--font-serif); line-height:1.8;">
+                    <p style="margin:0 0 6px;">@_todayLog.HourSlots.Count(s => !string.IsNullOrEmpty(s)) hours logged today.</p>
+                    @if (_todayLog.ProductivityScore.HasValue)
+                    {
+                        <p style="margin:0 0 6px;">Productivity score: <strong>@_todayLog.ProductivityScore / 10</strong></p>
+                    }
+                    @if (_todayLog.MoodScore.HasValue)
+                    {
+                        <p style="margin:0; color:var(--crail); font-style:italic;">Mood: @_moodLabels.GetValueOrDefault(_todayLog.MoodScore.Value, "—")</p>
+                    }
+                </div>
             </div>
-        </div>
+        }
 
-        <!-- Planned vs Actual -->
-        <div class="lt-card">
-            <div class="lt-section-label"><span>Planned vs Actual</span></div>
-            <div style="display:grid; gap:12px; padding:10px 0;">
-                @foreach (var item in _plannedVsActual)
+        <div class="lt-chart-grid-2" style="margin-bottom:22px;">
+            <!-- Productivity Score -->
+            <div class="lt-card">
+                <div class="lt-section-label"><span>@(_todayLog is not null ? "Today's" : "Month Avg") Productivity</span></div>
+                <div style="text-align:center; padding:10px 0;">
+                    @{ var score = _todayLog?.ProductivityScore ?? 0; var pct = score * 10; }
+                    <svg width="150" height="150" viewBox="0 0 150 150">
+                        <circle cx="75" cy="75" r="62" fill="none" stroke="var(--pampas)" stroke-width="10" />
+                        <circle cx="75" cy="75" r="62" fill="none" stroke="var(--crail)" stroke-width="10"
+                                stroke-dasharray="@((int)(pct / 100.0 * 390)) 390"
+                                stroke-linecap="round" transform="rotate(-90 75 75)"
+                                style="transition:stroke-dasharray 2s ease; filter:drop-shadow(0 0 10px rgba(193,95,60,0.19));" />
+                        <text x="75" y="70" text-anchor="middle" fill="var(--ink)" font-size="40" font-weight="700"
+                              font-family="'Libre Baskerville',serif">@(score > 0 ? score.ToString() : "—")</text>
+                        <text x="75" y="92" text-anchor="middle" fill="var(--ink-muted)" font-size="12"
+                              font-family="'JetBrains Mono',monospace">/10</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Category breakdown today -->
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Time Breakdown Today</span></div>
+                @if (_todayLog is not null && _categoryHours.Count > 0)
                 {
-                    <div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                            <span style="font-size:12px; color:var(--ink-soft); font-family:var(--font-sans); font-weight:600;">@item.Subject</span>
-                            <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">
-                                @item.Planned h → @item.Actual h
-                            </span>
-                        </div>
-                        <div style="display:flex; gap:4px; height:8px;">
-                            <div style="flex:@item.Planned; background:var(--cloudy-pale); border-radius:4px 0 0 4px;"></div>
-                            <div style="flex:@item.Actual; background:var(--crail); border-radius:0 4px 4px 0;"></div>
-                        </div>
+                    <div style="display:grid; gap:12px; padding:10px 0;">
+                        @foreach (var kv in _categoryHours.OrderByDescending(x => x.Value).Take(5))
+                        {
+                            <div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span style="font-size:12px; color:var(--ink-soft); font-family:var(--font-sans); font-weight:600;">@kv.Key</span>
+                                    <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@kv.Value h</span>
+                                </div>
+                                <div style="height:8px; background:var(--pampas); border-radius:4px; overflow:hidden;">
+                                    <div style="height:100%; background:var(--crail); border-radius:4px; width:@(Math.Min(kv.Value * 100 / 24, 100))%;"></div>
+                                </div>
+                            </div>
+                        }
                     </div>
+                }
+                else
+                {
+                    <div style="padding:20px; text-align:center; color:var(--ink-muted); font-size:13px;">Log today's activity in the Daily Logger</div>
                 }
             </div>
         </div>
-    </div>
 
-    <!-- Tasks -->
-    <div class="lt-card">
-        <div class="lt-section-label"><span>Tasks</span></div>
-        @foreach (var (task, idx) in _tasks.Select((t, i) => (t, i)))
+        <!-- Weekly productivity trend -->
+        @if (_weeklyScores.Count > 0)
         {
-            <div style="display:flex; align-items:center; gap:14px; padding:12px 0;@(idx < _tasks.Count - 1 ? " border-bottom:1px solid var(--border);" : "")">
-                <div class="lt-task-check @(task.Done ? "done" : "pending")">
-                    @if (task.Done) { <span>✓</span> }
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Last 7 Days Productivity</span></div>
+                <div style="display:flex; align-items:end; gap:10px; height:120px; padding:10px 0;">
+                    @foreach (var day in _weeklyScores)
+                    {
+                        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:end; height:100%;">
+                            <div style="width:100%; background:var(--crail); border-radius:6px 6px 0 0; height:@(day.Score * 10)%; min-height:4px;"></div>
+                            <span style="font-size:9px; color:var(--ink-muted); font-family:var(--font-mono); margin-top:6px;">@day.Label</span>
+                            <span style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700;">@(day.Score > 0 ? day.Score.ToString() : "—")</span>
+                        </div>
+                    }
                 </div>
-                <span style="flex:1; color:@(task.Done ? "var(--ink-muted)" : "var(--ink)"); font-size:14px; font-family:var(--font-sans); font-weight:600;@(task.Done ? " text-decoration:line-through;" : "")">
-                    @task.Title
-                </span>
-                <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@task.Time</span>
-                <span class="lt-tag @(task.Priority == "High" ? "danger" : task.Priority == "Med" ? "warning" : "crail")"
-                      style="font-size:9px; padding:3px 10px; border-radius:8px; font-weight:700;">@task.Priority</span>
             </div>
         }
-    </div>
+    }
 </div>
 
 @code {
-    private record PlannedActual(string Subject, int Planned, int Actual);
-    private record TaskItem(string Title, string Time, string Priority, bool Done);
+    private DailyLogDto? _todayLog;
+    private Dictionary<string, int> _categoryHours = new();
+    private List<(string Label, int Score)> _weeklyScores = new();
+    private bool _loading = true;
 
-    private readonly List<PlannedActual> _plannedVsActual = new()
+    private static readonly Dictionary<int, string> _moodLabels = new()
     {
-        new("Work", 8, 9),
-        new("Exercise", 2, 1),
-        new("Sleep", 8, 7),
-        new("Social", 2, 3)
+        [1] = "Terrible",
+        [2] = "Bad",
+        [3] = "Okay",
+        [4] = "Good",
+        [5] = "Great"
     };
 
-    private readonly List<TaskItem> _tasks = new()
+    protected override async Task OnInitializedAsync()
     {
-        new("Review PR #342", "09:00", "High", true),
-        new("Update docs", "11:00", "Med", false),
-        new("Gym — legs", "17:00", "High", false),
-        new("Read ch.5", "21:00", "Low", false)
-    };
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var from7 = today.AddDays(-6);
+
+            var logsTask = LogSvc.GetRangeAsync(from7, today);
+            var todayTask = LogSvc.GetAsync(today);
+            await Task.WhenAll(logsTask, todayTask);
+
+            _todayLog = todayTask.Result;
+
+            if (_todayLog is not null)
+            {
+                // Count hours per category
+                _categoryHours = _todayLog.HourSlots
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .GroupBy(s => s)
+                    .ToDictionary(g => g.Key, g => g.Count());
+            }
+
+            // Weekly scores
+            var allLogs = logsTask.Result;
+            _weeklyScores = Enumerable.Range(0, 7)
+                .Select(i =>
+                {
+                    var d = from7.AddDays(i);
+                    var log = allLogs.FirstOrDefault(l => l.Date == d);
+                    return (d.ToString("ddd"), log?.ProductivityScore ?? 0);
+                })
+                .ToList();
+        }
+        catch { }
+        finally { _loading = false; }
+    }
 }

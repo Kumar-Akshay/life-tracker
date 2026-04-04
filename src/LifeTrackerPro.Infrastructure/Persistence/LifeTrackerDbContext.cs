@@ -21,6 +21,8 @@ public class LifeTrackerDbContext : IdentityDbContext<ApplicationUser, Microsoft
     public DbSet<DailyLog> DailyLogs => Set<DailyLog>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<Book> Books => Set<Book>();
+    public DbSet<Video> Videos => Set<Video>();
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -37,6 +39,8 @@ public class LifeTrackerDbContext : IdentityDbContext<ApplicationUser, Microsoft
             builder.Entity<DailyLog>().HasQueryFilter(e => e.UserId == _currentUser.UserId);
             builder.Entity<Category>().HasQueryFilter(e => e.UserId == _currentUser.UserId);
             builder.Entity<Transaction>().HasQueryFilter(e => e.UserId == _currentUser.UserId);
+            builder.Entity<Book>().HasQueryFilter(e => e.UserId == _currentUser.UserId);
+            builder.Entity<Video>().HasQueryFilter(e => e.UserId == _currentUser.UserId);
             builder.Entity<UserSettings>().HasQueryFilter(e => e.UserId == _currentUser.UserId);
         }
     }
