@@ -8,6 +8,8 @@ public interface IApplicationDbContext
     DbSet<DailyLog> DailyLogs { get; }
     DbSet<Category> Categories { get; }
     DbSet<Transaction> Transactions { get; }
+    DbSet<Book> Books { get; }
+    DbSet<Video> Videos { get; }
     DbSet<UserSettings> UserSettings { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<AuditLog> AuditLogs { get; }

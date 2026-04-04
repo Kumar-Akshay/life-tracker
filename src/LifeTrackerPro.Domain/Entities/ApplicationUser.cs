@@ -15,6 +15,8 @@ public class ApplicationUser : IdentityUser<Guid>
     public virtual ICollection<DailyLog> DailyLogs { get; set; } = new List<DailyLog>();
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public virtual ICollection<Book> Books { get; set; } = new List<Book>();
+    public virtual ICollection<Video> Videos { get; set; } = new List<Video>();
     public virtual UserSettings? Settings { get; set; }
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

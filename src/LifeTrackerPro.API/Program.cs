@@ -131,6 +131,9 @@ app.MapCategoryEndpoints();
 app.MapDashboardEndpoints();
 app.MapSettingsEndpoints();
 app.MapProfileEndpoints();
+app.MapBookEndpoints();
+app.MapVideoEndpoints();
+app.MapTransactionEndpoints();
 
 // --- Auto-migrate in development ---
 if (app.Environment.IsDevelopment())

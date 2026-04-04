@@ -87,12 +87,17 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, ApiRe
 
         var daysInRange = to.DayNumber - from.DayNumber + 1;
 
+        var logsWithMood = logs.Where(l => l.MoodScore.HasValue).ToList();
+        var logsWithProd = logs.Where(l => l.ProductivityScore.HasValue).ToList();
+
         var dashboard = new DashboardDto
         {
             TotalLoggedHours = totalHours,
             TotalSpent = totalSpent,
             CurrentStreak = streak,
             DaysLogged = daysLogged,
+            AverageMoodScore = logsWithMood.Count > 0 ? Math.Round(logsWithMood.Average(l => (double)l.MoodScore!.Value), 1) : 0,
+            AverageProductivityScore = logsWithProd.Count > 0 ? Math.Round(logsWithProd.Average(l => (double)l.ProductivityScore!.Value), 1) : 0,
             HoursPerCategory = hoursPerCategory,
             DailyBreakdown = dailyBreakdowns,
             SpendSummary = new SpendSummaryDto

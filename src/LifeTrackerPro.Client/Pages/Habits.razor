@@ -1,4 +1,6 @@
 @page "/habits"
+@inject DailyLogService LogSvc
+@inject CategoryService CatSvc
 
 <PageTitle>Habits — LifeTracker Pro</PageTitle>
 
@@ -6,65 +8,143 @@
     <h1 class="lt-page-heading">Habit <span class="accent">Tracker</span></h1>
     <p class="lt-page-subtitle">Build consistency — every checked day compounds into transformation</p>
 
-    <!-- Stats -->
-    <div class="lt-grid-3" style="margin-bottom:28px;">
-        <div class="lt-card">
-            <div class="lt-stat-label">Active Habits</div>
-            <div class="lt-stat-value">6</div>
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else if (_habits.Count == 0)
+    {
+        <!-- Stats -->
+        <div class="lt-grid-3" style="margin-bottom:28px;">
+            <div class="lt-card"><div class="lt-stat-label">Active Habits</div><div class="lt-stat-value">0</div></div>
+            <div class="lt-card"><div class="lt-stat-label">Best Streak</div><div class="lt-stat-value">—</div></div>
+            <div class="lt-card"><div class="lt-stat-label">Completion</div><div class="lt-stat-value">—</div></div>
         </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Best Streak</div>
-            <div class="lt-stat-value">12 days</div>
+        <div class="lt-card" style="text-align:center; padding:40px; color:var(--ink-muted);">
+            <div style="font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:0.1em;">No logs yet</div>
+            <div style="font-size:13px; margin-top:6px;">Start logging your daily hours to see habits heatmap</div>
         </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Completion Rate</div>
-            <div class="lt-stat-value">71%</div>
-        </div>
-    </div>
-
-    <!-- Heatmap -->
-    <div class="lt-card" style="overflow-x:auto;">
-        <div class="lt-section-label"><span>January Heatmap</span></div>
-        <div style="display:grid; gap:6px; min-width:600px;">
-            <!-- Day numbers header -->
-            <div style="display:grid; grid-template-columns:130px repeat(28, 1fr); gap:3px; align-items:center;">
-                <div></div>
-                @for (int d = 1; d <= 28; d++)
-                {
-                    <div style="text-align:center; font-size:8px; color:var(--ink-faint); font-family:var(--font-mono); font-weight:600;">@d</div>
-                }
+    }
+    else
+    {
+        <!-- Stats -->
+        <div class="lt-grid-3" style="margin-bottom:28px;">
+            <div class="lt-card">
+                <div class="lt-stat-label">Tracked Habits</div>
+                <div class="lt-stat-value">@_habits.Count</div>
             </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">Best Streak</div>
+                <div class="lt-stat-value">@(_habits.Count > 0 ? _habits.Max(h => h.Streak) : 0) days</div>
+            </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">Avg Completion</div>
+                <div class="lt-stat-value">@(_habits.Count > 0 ? (int)Math.Round(_habits.Average(h => h.CompletionRate)) : 0)%</div>
+            </div>
+        </div>
 
-            @foreach (var habit in _habits)
-            {
-                <div style="display:grid; grid-template-columns:130px repeat(28, 1fr); gap:3px; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@habit.Name</span>
-                        <span style="font-size:9px; color:var(--crail); font-family:var(--font-mono); font-weight:700;">@(habit.Streak)d</span>
-                    </div>
-                    @for (int i = 0; i < habit.Data.Length; i++)
+        <!-- Heatmap -->
+        <div class="lt-card" style="overflow-x:auto;">
+            <div class="lt-section-label"><span>Last @_days Days Heatmap</span></div>
+            <div style="display:grid; gap:6px; min-width:600px;">
+                <!-- Day numbers header -->
+                <div style="display:grid; grid-template-columns:130px repeat(@_days, 1fr); gap:3px; align-items:center;">
+                    <div></div>
+                    @for (int d = 1; d <= _days; d++)
                     {
-                        var v = habit.Data[i];
-                        var intensity = v ? 0.2 + 0.8 * (i / 28.0) : 0.5;
-                        <div class="lt-heatmap-cell @(v ? "filled" : "empty")"
-                             style="opacity:@intensity.ToString("F2");@(v && i > 24 ? " box-shadow:0 0 6px rgba(193,95,60,0.19);" : "")"></div>
+                        <div style="text-align:center; font-size:8px; color:var(--ink-faint); font-family:var(--font-mono); font-weight:600;">@d</div>
                     }
                 </div>
-            }
+
+                @foreach (var habit in _habits)
+                {
+                    <div style="display:grid; grid-template-columns:130px repeat(@_days, 1fr); gap:3px; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:12px; color:var(--ink); font-family:var(--font-sans); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100px;">@habit.Name</span>
+                            <span style="font-size:9px; color:var(--crail); font-family:var(--font-mono); font-weight:700;">@(habit.Streak)d</span>
+                        </div>
+                        @for (int i = 0; i < habit.Data.Length; i++)
+                        {
+                            var v = habit.Data[i];
+                            <div class="lt-heatmap-cell @(v ? "filled" : "empty")"
+                                 title="@_dateLabels[i]: @(v ? habit.Name : "not done")"></div>
+                        }
+                    </div>
+                }
+            </div>
         </div>
-    </div>
+    }
 </div>
 
 @code {
-    private record HabitInfo(string Name, int Streak, bool[] Data);
+    private record HabitInfo(string Name, int Streak, bool[] Data, double CompletionRate);
 
-    private readonly List<HabitInfo> _habits = new()
+    private List<HabitInfo> _habits = new();
+    private string[] _dateLabels = Array.Empty<string>();
+    private int _days = 28;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        new("Meditate", 12, new[] { true, true, true, false, true, true, true, true, false, true, true, true, true, true, false, false, true, true, true, true, true, false, true, true, true, true, true, true }),
-        new("No Sugar", 5, new[] { false, false, true, true, false, false, true, true, true, false, true, true, false, false, true, true, true, true, false, true, true, false, false, true, true, true, true, true }),
-        new("Read 30min", 8, new[] { true, true, false, true, true, true, false, false, true, true, true, true, true, false, true, true, false, true, true, true, false, true, true, true, true, true, true, true }),
-        new("Exercise", 5, new[] { true, false, true, false, true, true, false, true, false, true, true, false, true, false, true, true, false, true, true, false, true, false, true, true, true, true, true, true }),
-        new("Journal", 3, new[] { false, false, false, true, false, false, true, false, false, true, false, true, false, false, true, true, false, false, true, false, true, false, true, false, false, true, true, true }),
-        new("No Phone Before Bed", 7, new[] { true, true, false, false, true, true, true, false, true, true, false, true, true, true, false, true, true, true, true, false, true, true, true, true, true, true, true, true })
-    };
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var from = today.AddDays(-(_days - 1));
+
+            var logsTask = LogSvc.GetRangeAsync(from, today);
+            var catsTask = CatSvc.GetAllAsync();
+            await Task.WhenAll(logsTask, catsTask);
+
+            var logs = logsTask.Result;
+            var cats = catsTask.Result;
+
+            // Build date range
+            var dateRange = Enumerable.Range(0, _days)
+                .Select(i => from.AddDays(i))
+                .ToArray();
+            _dateLabels = dateRange.Select(d => d.ToString("MMM d")).ToArray();
+
+            // Map logs by date
+            var logByDate = logs.ToDictionary(l => l.Date);
+
+            // Build a habit row for each active category that appears in logs
+            var activeCodes = logs
+                .SelectMany(l => l.HourSlots)
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct()
+                .ToHashSet();
+
+            var habitList = new List<HabitInfo>();
+            foreach (var code in activeCodes.Take(8))
+            {
+                var cat = cats.FirstOrDefault(c => c.Code == code || c.Letter == code);
+                if (cat is null) continue;
+
+                var data = dateRange.Select(d =>
+                {
+                    if (!logByDate.TryGetValue(d, out var log)) return false;
+                    return log.HourSlots.Contains(code);
+                }).ToArray();
+
+                var completionRate = data.Length > 0 ? data.Count(v => v) * 100.0 / data.Length : 0;
+                var streak = CalculateStreak(data);
+                habitList.Add(new HabitInfo(cat.Name, streak, data, completionRate));
+            }
+
+            _habits = habitList.OrderByDescending(h => h.Streak).ToList();
+        }
+        catch { }
+        finally { _loading = false; }
+    }
+
+    private static int CalculateStreak(bool[] data)
+    {
+        int streak = 0;
+        for (int i = data.Length - 1; i >= 0; i--)
+        {
+            if (data[i]) streak++;
+            else break;
+        }
+        return streak;
+    }
 }

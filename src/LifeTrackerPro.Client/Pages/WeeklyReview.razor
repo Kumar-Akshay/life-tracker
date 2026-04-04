@@ -1,4 +1,5 @@
 @page "/weekly-review"
+@inject DashboardService DashboardSvc
 
 <PageTitle>Weekly Review — LifeTracker Pro</PageTitle>
 
@@ -6,100 +7,155 @@
     <h1 class="lt-page-heading">Weekly <span class="accent">Review</span></h1>
     <p class="lt-page-subtitle">Reflect, recalibrate, and plan the week ahead</p>
 
-    <!-- AI Summary -->
-    <div class="lt-card accent lt-ai-summary" style="margin-bottom:22px;">
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
-            <span style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em;">
-                AI Summary — Week 4, January
-            </span>
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else
+    {
+        <!-- Week summary card -->
+        <div class="lt-card accent lt-ai-summary" style="margin-bottom:22px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                <span style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.15em;">
+                    Week of @_weekStart.ToString("MMM d") – @_weekEnd.ToString("MMM d, yyyy")
+                </span>
+            </div>
+            @if (_daysLogged == 0)
+            {
+                <p style="margin:0; color:var(--ink-muted);">No logs recorded this week. Start logging your daily activity to see a weekly summary.</p>
+            }
+            else
+            {
+                <p style="margin:0; font-size:15px; color:var(--ink); font-family:var(--font-serif); line-height:1.8;">
+                    You logged <strong>@_daysLogged days</strong> this week with <strong>@_totalHours hours</strong> tracked.
+                    @if (_totalSpent > 0) { <text>Spent <strong>@_totalSpent.ToString("N0")</strong> this week.</text> }
+                    @if (_avgMood > 0) { <text> Avg mood: <strong>@_avgMood.ToString("F1")/5</strong>.</text> }
+                    @if (_streak > 0) { <text> Current streak: <strong>@_streak days</strong>.</text> }
+                </p>
+            }
         </div>
-        <p>
-            "Strong week for productivity with 40h of focused work — your highest this month.
-            Exercise dropped slightly to 12h but you maintained your 5-day streak.
-            Social time was lower than average; consider scheduling friend time next week.
-            Weight trend is excellent at -2.4 kg for the month."
-        </p>
-    </div>
 
-    <div class="lt-chart-grid-2" style="margin-bottom:22px;">
-        <!-- Week at a Glance -->
-        <div class="lt-card">
-            <div class="lt-section-label"><span>Week at a Glance</span></div>
-            <div style="display:grid; gap:12px;">
-                @foreach (var (stat, idx) in _weekStats.Select((s, i) => (s, i)))
-                {
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;@(idx < _weekStats.Count - 1 ? " border-bottom:1px solid var(--border);" : "")">
-                        <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@stat.Label</span>
-                        <div style="text-align:right;">
-                            <div style="font-size:18px; font-weight:700; color:@stat.Color; font-family:var(--font-serif);">@stat.Value</div>
-                            <div style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@stat.Delta</div>
+        <div class="lt-chart-grid-2" style="margin-bottom:22px;">
+            <!-- Week at a Glance -->
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Week at a Glance</span></div>
+                <div style="display:grid; gap:12px;">
+                    @foreach (var (stat, idx) in _weekStats.Select((s, i) => (s, i)))
+                    {
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;@(idx < _weekStats.Count - 1 ? " border-bottom:1px solid var(--border);" : "")">
+                            <span style="font-size:13px; color:var(--ink); font-family:var(--font-sans); font-weight:600;">@stat.Label</span>
+                            <div style="text-align:right;">
+                                <div style="font-size:18px; font-weight:700; color:@stat.Color; font-family:var(--font-serif);">@stat.Value</div>
+                            </div>
                         </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Category distribution -->
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Top Categories</span></div>
+                @if (_topCategories.Count > 0)
+                {
+                    <div style="display:grid; gap:10px; padding:6px 0;">
+                        @foreach (var cat in _topCategories)
+                        {
+                            <div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <span style="font-size:12px; color:var(--ink-soft); font-family:var(--font-sans); font-weight:600;">@cat.CategoryName</span>
+                                    <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@cat.Hours h · @cat.Percentage%</span>
+                                </div>
+                                <div class="lt-progress-track">
+                                    <div class="lt-progress-fill" style="width:@((int)cat.Percentage)%; background:@cat.Color;"></div>
+                                </div>
+                            </div>
+                        }
                     </div>
+                }
+                else
+                {
+                    <div style="padding:20px; text-align:center; color:var(--ink-muted); font-size:13px;">Log activity to see category breakdown</div>
                 }
             </div>
         </div>
 
-        <!-- Reflection -->
-        <div class="lt-card">
-            <div class="lt-section-label"><span>Reflection</span></div>
-            @foreach (var (q, idx) in _reflections.Select((r, i) => (r, i)))
-            {
-                <div style="@(idx < _reflections.Count - 1 ? "margin-bottom:18px;" : "")">
-                    <div style="font-size:11px; color:var(--crail); font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px;">@q.Question</div>
-                    <p style="font-size:14px; color:var(--ink); font-family:var(--font-sans); line-height:1.6; margin:0;">@q.Answer</p>
+        <!-- Daily breakdown chart -->
+        @if (_dailyBreakdown.Count > 0)
+        {
+            <div class="lt-card">
+                <div class="lt-section-label"><span>Daily Hours This Week</span></div>
+                <div style="display:flex; align-items:end; gap:14px; height:140px; padding:12px 0;">
+                    @foreach (var day in _dailyBreakdown)
+                    {
+                        var pct = day.TotalHours > 0 ? Math.Min((int)(day.TotalHours * 100.0 / 24), 100) : 0;
+                        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:end; height:100%;">
+                            <div style="width:100%; background:var(--crail); border-radius:6px 6px 0 0; height:@pct%; min-height:@(day.TotalHours > 0 ? 4 : 0)px;"></div>
+                            <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); margin-top:6px;">@day.Label</span>
+                            <span style="font-size:10px; color:var(--crail); font-family:var(--font-mono); font-weight:700;">@day.TotalHours h</span>
+                        </div>
+                    }
                 </div>
-            }
-        </div>
-    </div>
-
-    <!-- Goals Progress -->
-    <div class="lt-card">
-        <div class="lt-section-label"><span>Goals Progress This Week</span></div>
-        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
-            @foreach (var goal in _weekGoals)
-            {
-                <div style="text-align:center; padding:16px; border-radius:14px; background:@(goal.Progress == 100 ? "var(--success-pale)" : "var(--pampas)"); border:1px solid @(goal.Progress == 100 ? "rgba(91,140,81,0.15)" : "var(--border)");">
-                    <svg width="64" height="64" viewBox="0 0 64 64" style="margin:0 auto 8px; display:block;">
-                        <circle cx="32" cy="32" r="27" fill="none" stroke="var(--pampas)" stroke-width="5" />
-                        <circle cx="32" cy="32" r="27" fill="none" stroke="@goal.Color" stroke-width="5"
-                                stroke-dasharray="@((int)(goal.Progress / 100.0 * 170)) 170"
-                                stroke-linecap="round" transform="rotate(-90 32 32)"
-                                style="transition:stroke-dasharray 1.5s cubic-bezier(0.16,1,0.3,1);" />
-                        <text x="32" y="36" text-anchor="middle" fill="var(--ink)" font-size="14" font-weight="700"
-                              font-family="'JetBrains Mono',monospace">@goal.Progress%</text>
-                    </svg>
-                    <div style="font-size:11px; color:var(--ink-soft); font-family:var(--font-sans); font-weight:600;">@goal.Name</div>
-                </div>
-            }
-        </div>
-    </div>
+            </div>
+        }
+    }
 </div>
 
 @code {
-    private record WeekStat(string Label, string Value, string Delta, string Color);
-    private record Reflection(string Question, string Answer);
-    private record WeekGoal(string Name, int Progress, string Color);
+    private record WeekStat(string Label, string Value, string Color);
+    private record DayBreakdown(string Label, int TotalHours);
 
-    private readonly List<WeekStat> _weekStats = new()
-    {
-        new("Work Hours", "40h", "▲ 5h vs W3", "#C15F3C"),
-        new("Sleep Avg", "7.4h", "▼ 0.4h", "#6B8EC7"),
-        new("Exercise", "12h", "▲ 5h vs W3", "#5B8C51"),
-        new("Spending", "$55", "Under $75 budget", "#C49A2D")
-    };
+    private List<WeekStat> _weekStats = new();
+    private List<CategoryHoursDto> _topCategories = new();
+    private List<DayBreakdown> _dailyBreakdown = new();
+    private int _daysLogged;
+    private int _totalHours;
+    private decimal _totalSpent;
+    private double _avgMood;
+    private int _streak;
+    private DateOnly _weekStart;
+    private DateOnly _weekEnd;
+    private bool _loading = true;
 
-    private readonly List<Reflection> _reflections = new()
+    protected override async Task OnInitializedAsync()
     {
-        new("What went well?", "Consistent early mornings, maintained exercise streak, shipped two PRs"),
-        new("What could improve?", "Less social media scrolling, need to read more, skipped journaling twice"),
-        new("Next week's focus?", "Finish Clean Architecture book, prep for system design interview")
-    };
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            // Current week Mon–Sun
+            var dow = (int)today.DayOfWeek;
+            _weekStart = today.AddDays(-(dow == 0 ? 6 : dow - 1));
+            _weekEnd = _weekStart.AddDays(6);
 
-    private readonly List<WeekGoal> _weekGoals = new()
-    {
-        new("Exercise 5 days", 100, "#5B8C51"),
-        new("Read 4 chapters", 75, "#C15F3C"),
-        new("Spend < $75", 100, "#5B8C51"),
-        new("Meditate daily", 57, "#C49A2D")
-    };
+            var dash = await DashboardSvc.GetAsync("week", _weekStart, today);
+            if (dash is not null)
+            {
+                _daysLogged = dash.DaysLogged;
+                _totalHours = dash.TotalLoggedHours;
+                _totalSpent = dash.TotalSpent;
+                _avgMood = dash.AverageMoodScore;
+                _streak = dash.CurrentStreak;
+                _topCategories = dash.HoursPerCategory.Take(5).ToList();
+
+                _weekStats = new()
+                {
+                    new("Hours Logged", $"{_totalHours}h", "#C15F3C"),
+                    new("Days Logged", $"{_daysLogged}/7", "#6B8EC7"),
+                    new("Spending", _totalSpent > 0 ? _totalSpent.ToString("N0") : "—", "#C49A2D"),
+                    new("Avg Mood", _avgMood > 0 ? $"{_avgMood:F1}/5" : "—", "#5B8C51"),
+                    new("Streak", $"{_streak} days", "#C15F3C")
+                };
+
+                // Build daily breakdown for the week
+                _dailyBreakdown = Enumerable.Range(0, 7).Select(i =>
+                {
+                    var d = _weekStart.AddDays(i);
+                    var breakdown = dash.DailyBreakdown.FirstOrDefault(b => b.Date == d);
+                    var hours = breakdown?.CategoryHours.Values.Sum() ?? 0;
+                    return new DayBreakdown(d.ToString("ddd"), hours);
+                }).ToList();
+            }
+        }
+        catch { }
+        finally { _loading = false; }
+    }
 }

@@ -1,0 +1,26 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+# Copy project files for layer caching
+COPY LifeTrackerPro.sln .
+COPY src/LifeTrackerPro.Shared/LifeTrackerPro.Shared.csproj src/LifeTrackerPro.Shared/
+COPY src/LifeTrackerPro.Client/LifeTrackerPro.Client.csproj src/LifeTrackerPro.Client/
+
+RUN dotnet restore src/LifeTrackerPro.Client/LifeTrackerPro.Client.csproj
+
+COPY src/LifeTrackerPro.Shared/ src/LifeTrackerPro.Shared/
+COPY src/LifeTrackerPro.Client/ src/LifeTrackerPro.Client/
+
+RUN dotnet publish src/LifeTrackerPro.Client/LifeTrackerPro.Client.csproj \
+    --configuration Release \
+    --no-restore \
+    --output /app/publish
+
+# Nginx stage — serve the Blazor WASM static files
+FROM nginx:alpine AS runtime
+
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

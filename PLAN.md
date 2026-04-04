@@ -13,9 +13,9 @@
 - [x] **Step 8** — PWA Configuration (manifest, service worker, iOS meta tags)
 - [x] **Step 9** — Unit Tests (28 tests — validators, handlers, domain, API response)
 - [x] **Step 10** — CI/CD Pipeline (GitHub Actions: build, test, publish API & Client)
-- [ ] **Step 11** — EF Core Migrations (run after PostgreSQL is available)
-- [ ] **Step 12** — Integration Tests (API endpoint tests with WebApplicationFactory)
-- [ ] **Step 13** — Docker Compose (API + Client + PostgreSQL)
+- [x] **Step 11** — EF Core Migrations (scripts/migrate.sh helper; `dotnet ef migrations add Initial`)
+- [x] **Step 12** — Integration Tests (WebApplicationFactory tests: auth, daily logs, categories)
+- [x] **Step 13** — Docker Compose (Dockerfile.api, Dockerfile.client, docker-compose.yml, nginx.conf)
 
 ---
 

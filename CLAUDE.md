@@ -315,12 +315,91 @@ All caught by `GlobalExceptionMiddleware` and mapped to `ApiResponse`.
 
 ---
 
-## Pending Work (from PLAN.md)
+## EF Core Migrations (Step 11)
 
-Steps 0–10 are complete. The following are still pending:
+`Microsoft.EntityFrameworkCore.Design` is included in the Infrastructure project. Use the helper script:
 
-- **Step 11**: EF Core migrations (`dotnet ef migrations add Initial`)
-- **Step 12**: Integration tests (API-level tests with TestServer/WebApplicationFactory)
-- **Step 13**: Deployment configuration (Docker, reverse proxy, production secrets)
+```bash
+# Add initial migration (requires dotnet-ef tool)
+./scripts/migrate.sh add Initial
 
-Feature pages scaffolded but not yet implemented: Spending, Goals, Life Pulse, Habits, Productivity, Videos, Books, Weekly Review.
+# Apply migrations
+./scripts/migrate.sh update
+
+# List / revert
+./scripts/migrate.sh list
+./scripts/migrate.sh revert
+```
+
+Or manually:
+```bash
+dotnet ef migrations add Initial \
+  --project src/LifeTrackerPro.Infrastructure \
+  --startup-project src/LifeTrackerPro.API
+
+dotnet ef database update \
+  --project src/LifeTrackerPro.Infrastructure \
+  --startup-project src/LifeTrackerPro.API
+```
+
+## Integration Tests (Step 12)
+
+Project: `tests/LifeTrackerPro.IntegrationTests/`
+
+Uses `WebApplicationFactory<Program>` with an EF Core InMemory database substituted at test time. Covers:
+- Auth endpoints (register, login, token, unauthorized access)
+- Daily log endpoints (upsert, get single, get range, idempotent update)
+- Category endpoints (CRUD, archive/restore)
+
+Run with:
+```bash
+dotnet test tests/LifeTrackerPro.IntegrationTests/
+```
+
+## Docker Compose (Step 13)
+
+```
+Dockerfile.api     — multi-stage build for ASP.NET Core API (port 8080)
+Dockerfile.client  — Blazor WASM build + nginx static serving (port 80)
+nginx.conf         — SPA routing + /api/ reverse proxy to API container
+docker-compose.yml — PostgreSQL + API + Client orchestration
+```
+
+```bash
+# Start all services
+POSTGRES_PASSWORD=secret JWT_KEY=your32charkey ENCRYPTION_KEY=your32charkey \
+  docker compose up -d
+
+# API at http://localhost:8080, Client at http://localhost
+```
+
+Required env vars for production:
+- `POSTGRES_PASSWORD` — PostgreSQL password
+- `JWT_KEY` — 32+ character JWT signing key
+- `ENCRYPTION_KEY` — 32+ character AES encryption key
+
+## Feature Pages
+
+All 8 feature pages are connected to real backend data:
+
+| Page | Data Source |
+|---|---|
+| Spending | `TransactionService` → `/api/transactions`, budget from `DashboardService` |
+| Goals | `DashboardService` → streak, days logged, category hours |
+| Life Pulse | `DashboardService` → computes 6 dimension scores from category hours + mood/productivity |
+| Habits | `DailyLogService` + `CategoryService` → 28-day heatmap from HourSlots |
+| Productivity | `DailyLogService` → today's log, productivity score, 7-day trend |
+| Weekly Review | `DashboardService` period=week → stats, category breakdown, daily bar chart |
+| Books | `BookService` → `/api/books` CRUD |
+| Videos | `VideoService` → `/api/videos` CRUD, kanban view |
+
+## New Entities Added
+
+| Entity | Table | Key Fields |
+|---|---|---|
+| `Book` | `books` | Title, Author, TotalPages, CurrentPage, Status (BookStatus), Rating, Color |
+| `Video` | `videos` | Title, Platform, DurationMinutes, ProgressPercent, Status (VideoStatus), Tags (JSONB) |
+
+New enums: `BookStatus` (ToStart/InProgress/Completed/Abandoned), `VideoStatus` (same)
+
+New API endpoints: `GET/POST/PUT/DELETE /api/books`, `GET/POST/PUT/DELETE /api/videos`, `GET/POST/PUT/DELETE /api/transactions`

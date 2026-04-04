@@ -1,4 +1,6 @@
 @page "/spending"
+@inject TransactionService TxSvc
+@inject DashboardService DashboardSvc
 
 <PageTitle>Spending — LifeTracker Pro</PageTitle>
 
@@ -6,95 +8,124 @@
     <h1 class="lt-page-heading">Spending & <span class="accent">Budget</span></h1>
     <p class="lt-page-subtitle">Track every dollar, stay in control</p>
 
-    <!-- Budget Overview -->
-    <div class="lt-card accent" style="margin-bottom:22px;">
-        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;">
-            <span style="font-size:11px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.12em;">February Budget</span>
-            <span style="font-size:22px; font-weight:700; color:var(--crail); font-family:var(--font-serif);">
-                $280 <span style="font-size:14px; font-weight:400; color:var(--ink-muted);">/ $500</span>
-            </span>
-        </div>
-        <div class="lt-progress-budget-track">
-            <div class="lt-progress-budget-fill" style="width:56%;"></div>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:8px;">
-            <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">56% used</span>
-            <span style="font-size:10px; color:var(--success); font-family:var(--font-mono); font-weight:700;">$220 remaining</span>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="lt-grid-3" style="margin-bottom:22px;">
-        <div class="lt-card">
-            <div class="lt-stat-label">Avg / Month</div>
-            <div class="lt-stat-value">$31</div>
-        </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Highest</div>
-            <div class="lt-stat-value" style="font-size:20px;">FEB $280</div>
-        </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Year Total</div>
-            <div class="lt-stat-value">$373</div>
-        </div>
-    </div>
-
-    <!-- Monthly Spending Chart (placeholder bars) -->
-    <div class="lt-card" style="margin-bottom:22px;">
-        <div class="lt-section-label"><span>Monthly Spending</span></div>
-        <div style="display:flex; align-items:end; gap:16px; height:160px; padding:16px 0;">
-            @foreach (var month in _monthlySpending)
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else
+    {
+        <!-- Budget Overview -->
+        <div class="lt-card accent" style="margin-bottom:22px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;">
+                <span style="font-size:11px; color:var(--ink-muted); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.12em;">
+                    @DateTime.Now.ToString("MMMM") Budget
+                </span>
+                <span style="font-size:22px; font-weight:700; color:var(--crail); font-family:var(--font-serif);">
+                    @_spent.ToString("N0")
+                    @if (_budget > 0)
+                    {
+                        <span style="font-size:14px; font-weight:400; color:var(--ink-muted);"> / @_budget.ToString("N0")</span>
+                    }
+                </span>
+            </div>
+            @if (_budget > 0)
             {
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:end; height:100%;">
-                    <div style="width:100%; background:var(--crail); border-radius:8px 8px 0 0; min-height:4px; transition:height 1s ease;"
-                         class="@($"height:{month.Percent}%")">
-                        <div style="width:100%; border-radius:8px 8px 0 0; background:var(--crail); height:@(month.Percent)%;"></div>
-                    </div>
-                    <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono); margin-top:8px; font-weight:600;">
-                        $@month.Amount
+                var pct = Math.Min((int)(_spent / _budget * 100), 100);
+                <div class="lt-progress-budget-track">
+                    <div class="lt-progress-budget-fill" style="width:@pct%;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                    <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@pct% used</span>
+                    <span style="font-size:10px; color:@(_budget - _spent > 0 ? "var(--success)" : "var(--danger)"); font-family:var(--font-mono); font-weight:700;">
+                        @((_budget - _spent).ToString("N0")) @(_budget - _spent >= 0 ? "remaining" : "over budget")
                     </span>
-                    <span style="font-size:10px; color:var(--ink-soft); font-family:var(--font-sans); margin-top:2px;">@month.Label</span>
                 </div>
             }
         </div>
-    </div>
 
-    <!-- Transactions -->
-    <div class="lt-card">
-        <div class="lt-section-label"><span>Transactions</span></div>
-        @foreach (var (tx, idx) in _transactions.Select((t, i) => (t, i)))
-        {
-            <div class="lt-transaction-row" style="@(idx == _transactions.Count - 1 ? "border-bottom:none;" : "")">
-                <div>
-                    <div style="color:var(--ink); font-size:14px; font-family:var(--font-sans); font-weight:600;">@tx.Description</div>
-                    <div style="display:flex; gap:8px; margin-top:4px;">
-                        <span style="color:var(--ink-muted); font-size:10px; font-family:var(--font-mono);">@tx.Date</span>
-                        <span class="lt-tag crail">@tx.Tag</span>
-                    </div>
-                </div>
-                <span class="lt-transaction-amount">@tx.Amount</span>
+        <!-- Stats -->
+        <div class="lt-grid-3" style="margin-bottom:22px;">
+            <div class="lt-card">
+                <div class="lt-stat-label">This Month</div>
+                <div class="lt-stat-value" style="font-size:20px;">@_spent.ToString("N0")</div>
             </div>
-        }
-    </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">Transactions</div>
+                <div class="lt-stat-value">@_transactions.Count</div>
+            </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">Avg / Day</div>
+                <div class="lt-stat-value">@_avgDaily.ToString("N0")</div>
+            </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="lt-card">
+            <div class="lt-section-label"><span>Transactions</span></div>
+            @if (_transactions.Count == 0)
+            {
+                <div style="text-align:center; padding:24px; color:var(--ink-muted); font-family:var(--font-mono); font-size:12px;">
+                    No transactions this month
+                </div>
+            }
+            else
+            {
+                @foreach (var (tx, idx) in _transactions.Select((t, i) => (t, i)))
+                {
+                    <div class="lt-transaction-row" style="@(idx == _transactions.Count - 1 ? "border-bottom:none;" : "")">
+                        <div>
+                            <div style="color:var(--ink); font-size:14px; font-family:var(--font-sans); font-weight:600;">@tx.Description</div>
+                            <div style="display:flex; gap:8px; margin-top:4px;">
+                                <span style="color:var(--ink-muted); font-size:10px; font-family:var(--font-mono);">@tx.Date.ToString("MMM d")</span>
+                                @if (!string.IsNullOrEmpty(tx.CategoryTag))
+                                {
+                                    <span class="lt-tag crail">@tx.CategoryTag</span>
+                                }
+                                @if (tx.IsRecurring)
+                                {
+                                    <span class="lt-tag" style="background:var(--cloudy-pale); color:var(--ink-muted);">Recurring</span>
+                                }
+                            </div>
+                        </div>
+                        <span class="lt-transaction-amount">@tx.CurrencyCode @tx.Amount.ToString("N2")</span>
+                    </div>
+                }
+            }
+        </div>
+    }
 </div>
 
 @code {
-    private record MonthData(string Label, int Amount, int Percent);
-    private record Transaction(string Date, string Description, string Amount, string Tag);
+    private List<TransactionDto> _transactions = new();
+    private decimal _spent;
+    private decimal _budget;
+    private decimal _avgDaily;
+    private bool _loading = true;
 
-    private readonly List<MonthData> _monthlySpending = new()
+    protected override async Task OnInitializedAsync()
     {
-        new("JAN", 93, 33),
-        new("FEB", 280, 100),
-        new("MAR", 45, 16),
-        new("APR", 0, 0)
-    };
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var from = new DateOnly(today.Year, today.Month, 1);
 
-    private readonly List<Transaction> _transactions = new()
-    {
-        new("Feb 9", "DJI Camera (Installment)", "$498", "Tech"),
-        new("Jan 27", "Send money — Pakistan", "$4,000", "Transfer"),
-        new("Jan 26", "Groceries", "$24.50", "Food"),
-        new("Jan 27", "Transport", "$17", "Travel")
-    };
+            var txTask = TxSvc.GetAsync(from, today);
+            var dashTask = DashboardSvc.GetAsync("month");
+            await Task.WhenAll(txTask, dashTask);
+
+            _transactions = txTask.Result;
+            _spent = txTask.Result.Sum(t => t.Amount);
+
+            var dash = dashTask.Result;
+            if (dash is not null)
+            {
+                _budget = dash.SpendSummary.BudgetRemaining.HasValue
+                    ? _spent + dash.SpendSummary.BudgetRemaining.Value
+                    : 0;
+                _avgDaily = dash.SpendSummary.AverageDaily;
+            }
+        }
+        catch { }
+        finally { _loading = false; }
+    }
 }

@@ -1,4 +1,6 @@
 @page "/books"
+@inject BookService BookSvc
+@inject NavigationManager Nav
 
 <PageTitle>Books — LifeTracker Pro</PageTitle>
 
@@ -6,76 +8,93 @@
     <h1 class="lt-page-heading">Book <span class="accent">Collection</span></h1>
     <p class="lt-page-subtitle">Track your reading journey, one page at a time</p>
 
-    <!-- Stats -->
-    <div class="lt-kpi-grid" style="margin-bottom:24px;">
-        <div class="lt-card">
-            <div class="lt-stat-label">Books</div>
-            <div class="lt-stat-value">4</div>
-        </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Completed</div>
-            <div class="lt-stat-value">1</div>
-        </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Pages</div>
-            <div class="lt-stat-value">942</div>
-        </div>
-        <div class="lt-card">
-            <div class="lt-stat-label">Pace</div>
-            <div class="lt-stat-value">15<span class="unit">/day</span></div>
-        </div>
-    </div>
-
-    <!-- Book Cards -->
-    @foreach (var book in _books)
+    @if (_loading)
     {
-        <div class="lt-card" style="margin-bottom:12px; display:flex; gap:20px; align-items:center;">
-            <!-- Cover -->
-            <div class="lt-book-cover" style="background:@book.Color; box-shadow:4px 6px 16px @(book.Color)20;">
-                <span>@book.Title[0]</span>
+        <div style="text-align:center; padding:40px; color:var(--ink-muted); font-family:var(--font-mono);">Loading...</div>
+    }
+    else
+    {
+        <!-- Stats -->
+        <div class="lt-kpi-grid" style="margin-bottom:24px;">
+            <div class="lt-card">
+                <div class="lt-stat-label">Books</div>
+                <div class="lt-stat-value">@_books.Count</div>
             </div>
-
-            <!-- Info -->
-            <div style="flex:1;">
-                <div style="display:flex; justify-content:space-between; align-items:start;">
-                    <div>
-                        <div style="color:var(--ink); font-size:17px; font-weight:700; font-family:var(--font-serif);">@book.Title</div>
-                        <div style="color:var(--ink-muted); font-size:12px; font-family:var(--font-sans);">@book.Author</div>
-                    </div>
-                    <span class="lt-tag @(book.Status == "Completed" ? "success" : book.Status == "In Progress" ? "warning" : "")"
-                          style="font-size:10px; padding:4px 12px; border-radius:10px; font-weight:700;
-                                 @(book.Status == "Completed" ? "background:var(--success-pale); color:var(--success);" :
-                                   book.Status == "In Progress" ? "background:var(--warning-pale); color:var(--warning);" :
-                                   "background:var(--cloudy-pale); color:var(--ink-muted);")">
-                        @book.Status
-                    </span>
-                </div>
-                <div style="margin-top:10px;">
-                    <div class="lt-progress-track" style="height:6px;">
-                        <div class="lt-progress-fill @(book.Status == "Completed" ? "success" : "crail")"
-                             style="width:@(book.TotalPages > 0 ? (int)(book.ReadPages * 100.0 / book.TotalPages) : 0)%;"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                        <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@book.ReadPages/@book.TotalPages pages</span>
-                        @if (book.Rating > 0)
-                        {
-                            <span style="font-size:11px; color:var(--warning);">@(new string('★', book.Rating))</span>
-                        }
-                    </div>
-                </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">Completed</div>
+                <div class="lt-stat-value">@_books.Count(b => b.Status == "Completed")</div>
+            </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">Pages Read</div>
+                <div class="lt-stat-value">@_books.Sum(b => b.CurrentPage)</div>
+            </div>
+            <div class="lt-card">
+                <div class="lt-stat-label">In Progress</div>
+                <div class="lt-stat-value">@_books.Count(b => b.Status == "InProgress")</div>
             </div>
         </div>
+
+        <!-- Book Cards -->
+        @if (_books.Count == 0)
+        {
+            <div class="lt-card" style="text-align:center; padding:40px; color:var(--ink-muted);">
+                <div style="font-size:32px; margin-bottom:12px;">📚</div>
+                <div style="font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:0.1em;">No books yet</div>
+                <div style="font-size:13px; margin-top:6px;">Add your first book to start tracking</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var book in _books)
+            {
+                <div class="lt-card" style="margin-bottom:12px; display:flex; gap:20px; align-items:center;">
+                    <!-- Cover -->
+                    <div class="lt-book-cover" style="background:@book.Color; box-shadow:4px 6px 16px @(book.Color)20; flex-shrink:0;">
+                        <span>@(book.Title.Length > 0 ? book.Title[0].ToString() : "?")</span>
+                    </div>
+
+                    <!-- Info -->
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; justify-content:space-between; align-items:start; gap:12px;">
+                            <div style="min-width:0;">
+                                <div style="color:var(--ink); font-size:17px; font-weight:700; font-family:var(--font-serif); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@book.Title</div>
+                                <div style="color:var(--ink-muted); font-size:12px; font-family:var(--font-sans);">@book.Author</div>
+                            </div>
+                            <span style="flex-shrink:0; font-size:10px; padding:4px 12px; border-radius:10px; font-weight:700;
+                                         @(book.Status == "Completed" ? "background:var(--success-pale); color:var(--success);" :
+                                           book.Status == "InProgress" ? "background:var(--warning-pale); color:var(--warning);" :
+                                           "background:var(--cloudy-pale); color:var(--ink-muted);")">
+                                @(book.Status == "InProgress" ? "In Progress" : book.Status == "ToStart" ? "To Start" : book.Status)
+                            </span>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <div class="lt-progress-track" style="height:6px;">
+                                <div class="lt-progress-fill @(book.Status == "Completed" ? "success" : "crail")"
+                                     style="width:@book.ReadPercent%;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                <span style="font-size:10px; color:var(--ink-muted); font-family:var(--font-mono);">@book.CurrentPage/@book.TotalPages pages · @book.ReadPercent%</span>
+                                @if (book.Rating > 0)
+                                {
+                                    <span style="font-size:11px; color:var(--warning);">@(new string('★', book.Rating))</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     }
 </div>
 
 @code {
-    private record BookInfo(string Title, string Author, int TotalPages, int ReadPages, string Status, int Rating, string Color);
+    private List<BookDto> _books = new();
+    private bool _loading = true;
 
-    private readonly List<BookInfo> _books = new()
+    protected override async Task OnInitializedAsync()
     {
-        new("Clean Architecture", "R.C. Martin", 432, 432, "Completed", 5, "#C15F3C"),
-        new("Data-Intensive Apps", "M. Kleppmann", 616, 310, "In Progress", 0, "#6B8EC7"),
-        new("Atomic Habits", "J. Clear", 320, 0, "To Start", 0, "#5B8C51"),
-        new("Pragmatic Programmer", "Hunt & Thomas", 352, 200, "In Progress", 0, "#C49A2D")
-    };
+        try { _books = await BookSvc.GetAllAsync(); }
+        catch { /* silently fall back to empty list */ }
+        finally { _loading = false; }
+    }
 }

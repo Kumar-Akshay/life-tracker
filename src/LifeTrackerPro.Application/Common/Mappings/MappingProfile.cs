@@ -20,5 +20,15 @@ public class MappingProfile : Profile
         CreateMap<UserSettings, UserSettingsDto>()
             .ForMember(d => d.TimeGranularity, opt => opt.MapFrom(s => s.TimeGranularity.ToString()))
             .ForMember(d => d.ThemeMode, opt => opt.MapFrom(s => s.ThemeMode.ToString()));
+
+        CreateMap<Book, BookDto>()
+            .ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()));
+
+        CreateMap<Video, VideoDto>()
+            .ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()))
+            .ForMember(d => d.Tags, opt => opt.MapFrom(s =>
+                JsonSerializer.Deserialize<List<string>>(s.Tags ?? "[]", (JsonSerializerOptions?)null) ?? new List<string>()));
+
+        CreateMap<Transaction, TransactionDto>();
     }
 }
